@@ -1,5 +1,8 @@
 # ZETA-test
-Repository containing ZETA-test functions and dependencies. For an example of how to use the code, check runExampleZETA.m in the /example/ subfolder. Your output should look like the images in the same directory. The article describing the original ZETA-test has been published in eLife: https://elifesciences.org/articles/71969
+Repository containing ZETA-test functions and dependencies. For an example of how to use the code, check runExampleZETA.m in the /example/ subfolder. Your output should look like the images in the same directory. 
+
+The article describing the original ZETA-test has been published in eLife: https://elifesciences.org/articles/71969
+
 If you're looking for the original ZETA repository, you can find it here: https://github.com/JorritMontijn/ZETA
 
 Note on updates and maintenance: we are currently still working on a time-series version of ZETA for calcium imaging data, so you might notice we are regularly updating the repository. zetatstest.m is still undergoing testing and regular changes, so we make no claims regarding its performance. zetatest.m, however, is stable and well tested, so you can safely use it. Note that the syntax is changed compared to the original getZeta.m file to make it conform to the other functions. In addition, this new repository has added two-sample versions of both the ZETA-test (zetatest2.m) and and the time-series ZETA-test (zetatstest2.m). More information on these tests can be found in runExampleZETA.m and the help comments of the respective functions.
