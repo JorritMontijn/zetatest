@@ -1,4 +1,4 @@
-# ZETA-test
+# The ZETA-test repository
 Repository containing ZETA-test functions and dependencies. For an example of how to use the code, check runExampleZETA.m in the /example/ subfolder. Your output should look like the images in the same directory. 
 
 The article describing the original ZETA-test has been published in eLife: https://elifesciences.org/articles/71969
@@ -15,7 +15,7 @@ This repository contains five main functions:
 4) zetatstest2.m: Same as above, but for testing differences between two time-series data arrays.
 5) getIFR.m: Calculates the instantaneous firing rate (IFR) without running the ZETA-test. Use this as you would a PSTH function.
 
-Rationale for ZETA
+# Rationale for ZETA
 
 Neurophysiological studies depend on a reliable quantification of whether and when a neuron responds to stimulation, be it sensory, optogenetically or otherwise. However, current statistical analysis methods to determine a neuron’s responsiveness require arbitrary parameter choices, such as a binning size. This choice can change the results of the analysis, which invites bad statistical practice and reduces the replicability of analyses. Moreover, many methods, such as bin-wise t-tests, only detect classically mean-rate modulated  cells. Especially with advent of techniques that yield increasingly large numbers of cells, such as Neuropixels  recordings , it is important to use tests for cell-inclusion that require no manual curation. Here, we present the parameter-free ZETA-test, which outperforms common approaches, in the sense that it includes more cells at a similar false-positive rate. 
 Finally, ZETA’s timescale-, parameter- and binning-free nature allowed us to implement a ZETA-derived algorithm (using multi-scale derivatives) to calculate peak onset and offset latencies in neuronal spike trains with theoretically unlimited temporal resolution. 
@@ -25,7 +25,7 @@ We have now adapted this approach to time-series data as well, and our initial b
 Please send any questions or comments to j.montijn at nin.knaw.nl.
 
 
-Dependencies
+# Dependencies
 The ZETA-test functions require the following Mathworks toolboxes to work:
 - Signal Processing Toolbox
 - Image Processing Toolbox
