@@ -22,6 +22,8 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	%		- vecDiff;
 	%		- vecScale; 
 	%
+	%v1.3 - 14 October 2021
+	
 	%Version history:
 	%1.0 - 24 January 2019
 	%	Created by Jorrit Montijn - split from getMultiScaleDeriv.m

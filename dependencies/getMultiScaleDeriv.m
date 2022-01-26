@@ -1,6 +1,6 @@
-function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur)
+function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur,boolUseParallel)
 	%getMultiScaleDeriv Returns multi-scale derivative. Syntax:
-	%   [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur)
+	%   [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur,boolUseParallel)
 	%Required input:
 	%	- vecT [N x 1]: timestamps (e.g., spike times)
 	%	- vecV [N x 1]: values (e.g., z-scores)
@@ -13,6 +13,7 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 	%						If set to 1, it will plot into the current axes if empty, or create a new figure if ~isempty(get(gca,'Children'))
 	%	- dblMeanRate: mean spiking rate to normalize vecRate (optional)
 	%	- dblUseMaxDur: trial duration to normalize vecRate (optional)
+	%	- boolUseParallel: use parallel processing (optional) [default: 0; often decreases performance, so be cautious!]
 	%
 	%Outputs:
 	%	- vecRate; Instantaneous spiking rate
@@ -54,6 +55,9 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 	if ~exist('dblUseMaxDur','var') || isempty(dblUseMaxDur)
 		dblUseMaxDur = range(vecT);
 	end
+	if ~exist('boolUseParallel','var') || isempty(boolUseParallel)
+		boolUseParallel = false;
+	end
 	
 	%% reorder just in case
 	[vecT,vecReorder] = sort(vecT(:),'ascend');
@@ -69,7 +73,7 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 	vecScale=dblBase.^vecExp;
 	intScaleNum = numel(vecScale);
 	matMSD = zeros(intN,intScaleNum);
-	try %try parallel
+	if boolUseParallel
 		parfor intScaleIdx=1:intScaleNum
 			dblScale = vecScale(intScaleIdx);
 			
@@ -79,7 +83,7 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 				matMSD(intS,intScaleIdx) = getD(dblScale,intS,intN,vecT,vecV);
 			end
 		end
-	catch %otherwise try normal loop
+	else
 		for intScaleIdx=1:intScaleNum
 			dblScale = vecScale(intScaleIdx);
 			

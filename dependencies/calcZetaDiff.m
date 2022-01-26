@@ -1,8 +1,8 @@
 function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-		calcZetaDiff(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize)
+		calcZetaDiff(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,boolPairedTest,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize)
 	%calcZetaDiff Calculates neuronal responsiveness difference
 	%[vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-	%	calcZetaDiff(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize)
+	%	calcZetaDiff(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,boolPairedTest,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize)
 	
 	%% check inputs and pre-allocate error output
 	vecSpikeT = [];
@@ -65,7 +65,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,cell
 		matJitterPerTrial1(:,intResampling) = vecJitterPerTrial1(randperm(numel(vecJitterPerTrial1)));
 		matJitterPerTrial2(:,intResampling) = vecJitterPerTrial2(randperm(numel(vecJitterPerTrial2)));
 	end
-	if intTrials1 == intTrials2
+	if boolPairedTest
 		matJitterPerTrial2 = matJitterPerTrial1;
 	end
 	try

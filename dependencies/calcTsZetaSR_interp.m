@@ -1,5 +1,5 @@
 function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-		calcTsZeta(vecTraceT,vecTraceAct,vecEventStarts,dblSamplingInterval,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize)
+		calcTsZetaSR_interp(vecTraceT,vecTraceAct,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize)
 	%calcTraceZeta Calculates neuronal responsiveness index zeta
 	%[vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,vecMeanTrace,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
 	%	calcTraceZeta(vecTraceT,vecTraceAct,vecEventStarts,dblSamplingInterval,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize)
@@ -35,9 +35,10 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 		return;
 	end
 	
+	
 	%% get trial responses
 	[vecRealDiff,vecRealFrac,vecRealFracLinear,vecRefT] = ...
-		getTraceOffset(vecPseudoT,vecPseudoTrace,vecPseudoStartT',dblSamplingInterval,dblUseMaxDur);
+		getTraceOffsetSR_interp(vecPseudoT,vecPseudoTrace,vecPseudoStartT',vecRefT,dblUseMaxDur);
 	[dblMaxD,intZETALoc]= max(abs(vecRealDiff));
 	intSamples = numel(vecRealDiff);
 	intTrials = numel(vecPseudoStartT);
@@ -64,7 +65,7 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 		end
 		
 		%% run initial set
-		[vecMaxRandD,cellRandDiff] = getRandTsZetaBatch(vecPseudoT,vecPseudoTrace,vecPseudoStartT,dblSamplingInterval,dblUseMaxDur,dblJitterSize,intBatchSize,boolUseParallel);
+		[vecMaxRandD,cellRandDiff,cellRandT] = getRandTsZetaBatchSR_interp(vecPseudoT,vecPseudoTrace,vecPseudoStartT,vecRefT,dblUseMaxDur,dblJitterSize,intBatchSize,boolUseParallel);
 		%calculate initial p
 		dblOldZetaP = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
 		intCurrIter = intBatchSize;
@@ -73,10 +74,11 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 		intMaxIters = 1000;
 		boolConverged = false;
 		while ~boolConverged && intCurrIter < intMaxIters
-			[vecBatchMaxRandD,cellBatchRandDiff] = getRandTsZetaBatch(vecPseudoT,vecPseudoTrace,vecPseudoStartT,dblSamplingInterval,dblUseMaxDur,dblJitterSize,intBatchSize,boolUseParallel);
+			[vecBatchMaxRandD,cellBatchRandDiff,cellBatchRandT] = getRandTsZetaBatchSR_interp(vecPseudoT,vecPseudoTrace,vecPseudoStartT,vecRefT,dblUseMaxDur,dblJitterSize,intBatchSize,boolUseParallel);
 			intCurrIter = intCurrIter + intBatchSize;
 			vecMaxRandD = cat(2,vecMaxRandD,vecBatchMaxRandD);
 			cellRandDiff = cat(2,cellRandDiff,cellBatchRandDiff);
+			cellRandT = cat(2,cellRandT,cellBatchRandT);
 			%check if p is stable
 			[dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
 			dblChange = abs(1 - (dblZetaP / dblOldZetaP));
@@ -85,7 +87,6 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 				boolConverged = true;
 			end
 		end
-		cellRandT = cellfill(vecRefT,size(cellRandDiff));
 	else
 		% run pre-set number of iterations
 		cellRandT = cell(1,intResampNum);
@@ -104,10 +105,10 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 				vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 				
 				%get temp offset
-				vecRandDiff = getTraceOffset(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblSamplingInterval,dblUseMaxDur);
-				
+				[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetSR_interp(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,vecRefT,dblUseMaxDur);
+			
 				%assign data
-				cellRandT{intResampling} = vecRefT;
+				cellRandT{intResampling} = vecRandT;
 				cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
 				vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));
 			end
@@ -117,10 +118,10 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 				vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 				
 				%get temp offset
-				vecRandDiff = getTraceOffset(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblSamplingInterval,dblUseMaxDur);
+				[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetSR_interp(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,vecRefT,dblUseMaxDur);
 				
 				%assign data
-				cellRandT{intResampling} = vecRefT;
+				cellRandT{intResampling} = vecRandT;
 				cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
 				vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));
 			end

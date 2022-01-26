@@ -1,12 +1,12 @@
-function [dblZetaP,sZETA] = zetatstest2(vecTraceT1,vecTraceAct1,matEventTimes1,vecTraceT2,vecTraceAct2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolPairwise,boolDirectQuantile,dblJitterSize)
+function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTime2,vecValue2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolPairwise,boolDirectQuantile,dblJitterSize)
 	%zetatstest2 Calculates difference in responsiveness index zeta for two timeseries
-	%syntax: [dblZetaP,sZETA] = zetatstest2(vecTraceT1,vecTraceAct1,matEventTimes1,vecTraceT2,vecTraceAct2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolPairwise,boolDirectQuantile,dblJitterSize)
+	%syntax: [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTime2,vecValue2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolPairwise,boolDirectQuantile,dblJitterSize)
 	%	input:
-	%	- vecTraceT1 [N x 1]: time (s) corresponding to entries in vecTraceAct1
-	%	- vecTraceAct1 [N x 1]: activation trace (e.g., calcium imaging dF/F0)
+	%	- vecTime1 [N x 1]: time (s) corresponding to entries in vecValue1
+	%	- vecValue1 [N x 1]: data values (e.g., calcium imaging dF/F0)
 	%	- vecEventTimes1 [T x 1]: event on times (s), or [T x 2] including event off times
-	%	- vecTraceT2 [N x 1]: time (s) corresponding to entries in vecTraceAct2
-	%	- vecTraceAct2 [N x 1]: activation trace (e.g., calcium imaging dF/F0)
+	%	- vecTime2 [N x 1]: time (s) corresponding to entries in vecValue2
+	%	- vecValue2 [N x 1]: data values (e.g., calcium imaging dF/F0)
 	%	- vecEventTimes2 [T x 1]: event on times (s), or [T x 2] including event off times
 	%	- dblUseMaxDur: float (s), ignore all values beyond this duration after stimulus onset
 	%								[default: median of trial start to trial start]
@@ -37,15 +37,15 @@ function [dblZetaP,sZETA] = zetatstest2(vecTraceT1,vecTraceAct1,matEventTimes1,v
 	
 	%% prep data
 	%ensure orientation
-	vecTraceT1 = vecTraceT1(:);
-	[vecTraceT1,vecReorder1] = sort(vecTraceT1);
-	vecTraceAct1 = vecTraceAct1(:);
-	vecTraceAct1 = vecTraceAct1(vecReorder1);
+	vecTime1 = vecTime1(:);
+	[vecTime1,vecReorder1] = sort(vecTime1);
+	vecValue1 = vecValue1(:);
+	vecValue1 = vecValue1(vecReorder1);
 	
-	vecTraceT2 = vecTraceT2(:);
-	[vecTraceT2,vecReorder2] = sort(vecTraceT2);
-	vecTraceAct2 = vecTraceAct2(:);
-	vecTraceAct2 = vecTraceAct2(vecReorder2);
+	vecTime2 = vecTime2(:);
+	[vecTime2,vecReorder2] = sort(vecTime2);
+	vecValue2 = vecValue2(:);
+	vecValue2 = vecValue2(vecReorder2);
 	
 	%calculate stim/base difference?
 	boolStopSupplied = false;
@@ -91,14 +91,14 @@ function [dblZetaP,sZETA] = zetatstest2(vecTraceT1,vecTraceAct1,matEventTimes1,v
 	end
 	
 	%sampling interval
-	dblSamplingInterval = max(median(diff(vecTraceT1)),median(diff(vecTraceT2)));
+	dblSamplingInterval = max(median(diff(vecTime1)),median(diff(vecTime2)));
 	
 	%% get ts-zeta diff
 	vecEventStarts1 = matEventTimes1(:,1);
 	vecEventStarts2 = matEventTimes2(:,1);
-	if numel(vecEventStarts1) > 1 && numel(vecTraceT1) > 1 && numel(vecEventStarts2) > 1 && numel(vecTraceT2) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
+	if numel(vecEventStarts1) > 1 && numel(vecTime1) > 1 && numel(vecEventStarts2) > 1 && numel(vecTime2) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
 		[vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-			calcTsZetaDiff(vecTraceT1,vecTraceAct1,vecEventStarts1,vecTraceT2,vecTraceAct2,vecEventStarts2,dblSamplingInterval,dblUseMaxDur,intResampNum,boolPairwise,boolDirectQuantile,dblJitterSize);
+			calcTsZetaDiff(vecTime1,vecValue1,vecEventStarts1,vecTime2,vecValue2,vecEventStarts2,dblSamplingInterval,dblUseMaxDur,intResampNum,boolPairwise,boolDirectQuantile,dblJitterSize);
 	else
 		intZETALoc = nan;
 	end
@@ -143,14 +143,14 @@ function [dblZetaP,sZETA] = zetatstest2(vecTraceT1,vecTraceAct1,matEventTimes1,v
 				%pre-allocate
 				vecEventStarts = matEventTimes1(:,1);
 				vecEventStops = matEventTimes1(:,2);
-				vecThisTraceT = vecTraceT1;
-				vecThisTraceAct = vecTraceAct1;
+				vecThisTraceT = vecTime1;
+				vecThisTraceAct = vecValue1;
 			else
 				%pre-allocate
 				vecEventStarts = matEventTimes2(:,1);
 				vecEventStops = matEventTimes2(:,2);
-				vecThisTraceT = vecTraceT2;
-				vecThisTraceAct = vecTraceAct2;
+				vecThisTraceT = vecTime2;
+				vecThisTraceAct = vecValue2;
 			end
 			dblMedianBaseDur = median(vecEventStarts(2:end) - vecEventStops(1:(end-1)));
 			intTimeNum = numel(vecThisTraceT);
@@ -228,7 +228,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTraceT1,vecTraceAct1,matEventTimes1,v
 		end
 		if intPlot > 1
 			subplot(2,3,1)
-			[vecRefT21,matTracePerTrial1] = getTraceInTrial(vecTraceT1,vecTraceAct1,vecEventStarts1,dblSamplingInterval,dblUseMaxDur);
+			[vecRefT21,matTracePerTrial1] = getTraceInTrial(vecTime1,vecValue1,vecEventStarts1,dblSamplingInterval,dblUseMaxDur);
 			imagesc(vecRefT21,1:size(matTracePerTrial1,1),matTracePerTrial1);
 			colormap(hot);
 			xlabel('Time after event (s)');
@@ -238,7 +238,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTraceT1,vecTraceAct1,matEventTimes1,v
 			grid off;
 			
 			subplot(2,3,4)
-			[vecRefT22,matTracePerTrial2] = getTraceInTrial(vecTraceT2,vecTraceAct2,vecEventStarts2,dblSamplingInterval,dblUseMaxDur);
+			[vecRefT22,matTracePerTrial2] = getTraceInTrial(vecTime2,vecValue2,vecEventStarts2,dblSamplingInterval,dblUseMaxDur);
 			imagesc(vecRefT22,1:size(matTracePerTrial2,1),matTracePerTrial2);
 			colormap(hot);
 			xlabel('Time after event (s)');
@@ -290,7 +290,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTraceT1,vecTraceAct1,matEventTimes1,v
 			sZETA.vecMu1 = vecMu1;
 			sZETA.vecMu2 = vecMu2;
 		end
-		sZETA.vecTraceT = vecTraceT1;
+		sZETA.vecTime1 = vecTime1;
 		sZETA.vecD = vecRealDiff;
 		sZETA.cellRandDiff = cellRandDiff;
 		sZETA.vecMeanBase = vecStimAct;

@@ -1,8 +1,8 @@
 	function [vecThisDiff,vecThisFrac,vecThisFracLinear,vecRefT] = ...
 			getTraceOffset(vecTraceT,vecTraceAct,vecStimUseOnTime,dblSamplingInterval,dblUseMaxDur)
 	%getTraceOffset Calculate temporal offset vectors. Syntax:
-	%[vecThisDiff,vecThisFrac,vecThisFracLinear] = ...
-	%	getTraceOffset(vecSpikeT,vecSpikeTimes,vecStimUseOnTime,dblUseMaxDur)
+	%[vecThisDiff,vecThisFrac,vecThisFracLinear,vecRefT,vecMeanTrace] = ...
+	%	getTraceOffset(vecSpikeT,vecSpikeTimes,vecStimUseOnTime,dblSamplingInterval,dblUseMaxDur)
 	%
 	%This is a subfunction for getZeta().
 	

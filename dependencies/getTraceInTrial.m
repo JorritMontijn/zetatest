@@ -23,8 +23,8 @@ function [vecRefT,matTracePerTrial] = getTraceInTrial(vecTimestamps,vecTrace,vec
 		%% get original times
 		dblStartT = vecEventStarts(intTrial);
 		dblStopT = dblStartT+dblUseMaxDur;
-		intStartT = max([1 find(vecTimestamps > dblStartT,1) - 1]);
-		intStopT = min([intTimeNum find(vecTimestamps > dblStopT,1) + 1]);
+		intStartT = max([1 find(vecTimestamps >= dblStartT,1) - 1]);
+		intStopT = min([intTimeNum find(vecTimestamps >= dblStopT,1) + 1]);
 		vecSelectFrames = intStartT:intStopT;
 		
 		%% get data

@@ -52,7 +52,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%		3) Peak time of instantaneous firing rate
 	%		4) Onset time of above peak, defined as the first crossing of peak half-height
 	%
-	%v3.0a - 14 Dec 2021
+	%v3.1 - 11 Jan 2022
 	
 	%Version history:
 	%0.9 - 27 June 2019
@@ -84,6 +84,8 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%	Fixed figure maximization in new matlab versions that deprecated javaframe functionality [by JM]
 	%3.0 - 14 Dec 2021
 	%	Added stitching, changed name [by JM]
+	%3.1 - 11 Jan 2022
+	%	Updated syntax [by JM]
 	
 	%% prep data
 	%ensure orientation
@@ -93,6 +95,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%calculate stim/base difference?
 	boolStopSupplied = false;
 	dblMeanZ = nan;
+	dblMeanP = nan;
 	if size(matEventTimes,2) > 2
 		matEventTimes = matEventTimes';
 	end
@@ -107,7 +110,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	
 	%get resampling num
 	if ~exist('intResampNum','var') || isempty(intResampNum)
-		intResampNum = 100;
+		intResampNum = 100;%100;
 	end
 	
 	%get intPlot
@@ -117,7 +120,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	
 	%get intLatencyPeaks
 	if ~exist('intLatencyPeaks','var') || isempty(intLatencyPeaks)
-		if nargout > 1
+		if nargout > 3
 			intLatencyPeaks = 2;
 		else
 			intLatencyPeaks = 0;
@@ -142,7 +145,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%% get zeta
 	vecEventStarts = matEventTimes(:,1);
 	if numel(vecEventStarts) > 1 && numel(vecSpikeTimes) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
-		[vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandDiff,cellRandT,dblZetaP,dblZETA,intZETALoc] = ...
+		[vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
 			calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize);
 	else
 		intZETALoc = nan;
@@ -194,7 +197,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	dblD_InvSign = vecRealDiff(intPeakLocInvSign);
 	
 	%% calculate mean-rate difference with t-test
-	if boolStopSupplied && (nargout > 2 || intPlot > 1)
+	if boolStopSupplied && (nargout > 1 || intPlot > 1)
 		vecRespBinsDur = sort(flat([matEventTimes(:,1) matEventTimes(:,2)]));
 		vecR = histcounts(vecSpikeTimes,vecRespBinsDur);
 		vecD = diff(vecRespBinsDur)';
@@ -370,7 +373,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	end
 	
 	%% build optional output structure
-	if nargout > 2
+	if nargout > 1
 		sZETA = struct;
 		sZETA.dblZETA = dblZETA;
 		sZETA.dblD = dblD;
