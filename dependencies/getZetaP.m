@@ -4,6 +4,7 @@ function [dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile)
 	
 	%% calculate significance
 	%find highest peak and retrieve value
+	vecMaxRandD = sort(unique(vecMaxRandD));
 	dblRandMu = mean(vecMaxRandD);
 	dblRandVar = var(vecMaxRandD);
 	
@@ -12,8 +13,16 @@ function [dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile)
 		%define p-value
 		dblZetaP = nan(size(dblMaxD));
 		for i=1:numel(dblMaxD)
-			dblZetaP(i) = 1 - (sum(dblMaxD(i)>vecMaxRandD)/(1+numel(vecMaxRandD)));
+			if dblMaxD < min(vecMaxRandD) || isnan(dblMaxD)
+				dblValue = 0;
+			elseif dblMaxD > max(vecMaxRandD) || isinf(dblMaxD)
+				dblValue = numel(vecMaxRandD);
+			else
+				dblValue = interp1(vecMaxRandD,1:numel(vecMaxRandD),dblMaxD);
+			end
+			dblZetaP(i) = 1 - (dblValue/(1+numel(vecMaxRandD)));
 		end
+		
 		%transform to output z-score
 		dblZETA = -norminv(dblZetaP/2);
 	else
