@@ -1,8 +1,8 @@
 function [vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-		calcTraceZetaDiff(vecTraceT1,vecTraceAct1,vecEventStarts1,vecTraceT2,vecTraceAct2,vecEventStarts2,dblSamplingInterval,dblUseMaxDur,intResampNum,boolPairwise,boolDirectQuantile,dblJitterSize)
+		calcTsZetaDiff(vecTraceT1,vecTraceAct1,vecEventStarts1,vecTraceT2,vecTraceAct2,vecEventStarts2,dblSamplingInterval,dblUseMaxDur,intResampNum,boolPairwise,boolDirectQuantile,dblJitterSize)
 	%calcTraceZeta Calculates neuronal responsiveness index zeta
 	%[vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,matRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-	%	calcTraceZetaDiff(vecTraceT1,vecTraceAct1,vecEventStarts1,vecTraceT2,vecTraceAct2,vecEventStarts2,dblSamplingInterval,dblUseMaxDur,intResampNum,boolPairwise,boolDirectQuantile,dblJitterSize)
+	%	calcTsZetaDiff(vecTraceT1,vecTraceAct1,vecEventStarts1,vecTraceT2,vecTraceAct2,vecEventStarts2,dblSamplingInterval,dblUseMaxDur,intResampNum,boolPairwise,boolDirectQuantile,dblJitterSize)
 	
 	%% check inputs and pre-allocate error output
 	vecRefT = [];
@@ -50,11 +50,17 @@ function [vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,cellRa
 	end
 	
 	%% build reference time
-	vecRefT = (dblSamplingInterval/2):dblSamplingInterval:dblUseMaxDur;
+	vecRefT1 = getTsRefT(vecPseudoT1,vecPseudoStartT1,dblUseMaxDur);
+	vecRefT2 = getTsRefT(vecPseudoT2,vecPseudoStartT2,dblUseMaxDur);
+	%set tol
+	dblSampInterval = (median(diff(vecPseudoT1)) + median(diff(vecPseudoT2)))/2;
+	dblTol = dblSampInterval/100;
+	vecRefT = uniquetol(cat(1,vecRefT1(:),vecRefT2(:)),dblTol);
 	
 	%% get trial responses
 	[vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,vecRefT] = ...
 		getTraceOffsetDiff(vecPseudoT1,vecPseudoTrace1,vecPseudoStartT1',vecPseudoT2,vecPseudoTrace2,vecPseudoStartT2',vecRefT,dblUseMaxDur);
+	[dblMaxD,intZETALoc]= max(abs(vecRealDiff));
 	
 	%% run bootstraps; try parallel, otherwise run normal loop
 	cellRandDiff = cell(1,intResampNum);
@@ -102,24 +108,9 @@ function [vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,cellRa
 		end
 	end
 	
-	%% calculate measure of effect size (for equal n, d' equals Cohen's d)
-	%find highest peak and retrieve value
-	dblRandMu = mean(vecMaxRandD);
-	dblRandVar = var(vecMaxRandD);
-	[dblMaxD,intZETALoc]= max(abs(vecRealDiff));
-	
-	if boolDirectQuantile
-		%calculate statistical significance using empirical quantiles
-		%define p-value
-		dblZetaP = 1 - (sum(dblMaxD>vecMaxRandD)/(1+numel(vecMaxRandD)));
-		
-		%transform to output z-score
-		dblZETA = -norminv(dblZetaP/2);
-	else
-		%calculate statistical significance using Gumbel distribution
-		[dblZetaP,dblZETA] = getGumbel(dblRandMu,dblRandVar,dblMaxD);
-		%fprintf('Pre-correction d=%.3f,post-correction z=%.3f (p=%.3f)\n',dblD,dblZETA,dblP);
-	end
-	
+	%% calculate significance
+	dblZetaP = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
+	%dblZETA = -norminv(((dblZetaP.*2)./(dblZetaP+1))/2);
+	%dblZetaP = (1-normcdf(dblZETA))*2;
 end
 

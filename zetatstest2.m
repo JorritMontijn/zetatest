@@ -67,7 +67,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	
 	%get resampling num
 	if ~exist('intResampNum','var') || isempty(intResampNum)
-		intResampNum = 250;
+		intResampNum = 1000;
 	end
 	
 	%get boolPlot

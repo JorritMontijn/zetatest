@@ -41,95 +41,49 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 	[dblMaxD,intZETALoc]= max(abs(vecRealDiff));
 	
 	%% run bootstraps; try parallel, otherwise run normal loop
-	if intResampNum < 1
-		%% get parameters
-		dblConvAt = intResampNum; %convergence fraction
-		boolUseParallel = true;
-		try
-			objP = gcp('nocreate');
-			if isempty(objP)
-				%create pool
-				objP=gcp;
-				%test parfor
-				parfor testi=1:10
-					x=rand(10);
-				end
-			end
-			intBatchSize = objP.NumWorkers; %size of pool
-		catch
-			boolUseParallel = false;
-			intBatchSize = 20; %size of pool
-		end
-		
-		%% run initial set
-		[vecMaxRandD,cellRandT,cellRandDiff] = getRandZetaBatch(vecPseudoSpikeTimes,vecPseudoEventT,dblUseMaxDur,dblJitterSize,intBatchSize,boolUseParallel);
-		%calculate initial p
-		dblOldZetaP = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
-		intCurrIter = intBatchSize;
-		
-		%% continue until converged
-		intMaxIters = 1000;
-		boolConverged = false;
-		while ~boolConverged && intCurrIter < intMaxIters
-			[vecBatchMaxRandD,cellBatchRandT,cellBatchRandDiff] = getRandZetaBatch(vecPseudoSpikeTimes,vecPseudoEventT,dblUseMaxDur,dblJitterSize,intBatchSize,boolUseParallel);
-			intCurrIter = intCurrIter + intBatchSize;
-			vecMaxRandD = cat(2,vecMaxRandD,vecBatchMaxRandD);
-			cellRandT = cat(2,cellRandT,cellBatchRandT);
-			cellRandDiff = cat(2,cellRandDiff,cellBatchRandDiff);
+	% run pre-set number of iterations
+	cellRandT = cell(1,intResampNum);
+	cellRandDiff = cell(1,intResampNum);
+	vecMaxRandD = nan(1,intResampNum);
+	vecStartOnly = vecPseudoEventT(:);
+	intTrials = numel(vecStartOnly);
+	%vecJitterPerTrial = dblJitterSize*dblUseMaxDur*((rand(size(vecStartOnly))-0.5)*2); %original zeta
+	vecJitterPerTrial = dblJitterSize*linspace(-dblUseMaxDur,dblUseMaxDur,intTrials)'; %new
+	matJitterPerTrial = nan(intTrials,intResampNum);
+	for intResampling=1:intResampNum
+		matJitterPerTrial(:,intResampling) = vecJitterPerTrial(randperm(numel(vecJitterPerTrial)));
+	end
+	try
+		parfor intResampling=1:intResampNum
+			%% get random subsample
+			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
-			%check if p is stable
-			[dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
-			dblChange = abs(1 - (dblZetaP / dblOldZetaP));
-			dblOldZetaP = dblZetaP;
-			if dblChange < dblConvAt || (dblZetaP == 0 && dblOldZetaP == 0)
-				boolConverged = true;
-			end
+			%get temp offset
+			[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear,vecThisSpikeTimes] = ...
+				getTempOffsetOne(vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
+			
+			%assign data
+			cellRandT{intResampling} = vecThisSpikeTimes;
+			cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
+			vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));
 		end
-	else
-		% run pre-set number of iterations
-		cellRandT = cell(1,intResampNum);
-		cellRandDiff = cell(1,intResampNum);
-		vecMaxRandD = nan(1,intResampNum);
-		vecStartOnly = vecPseudoEventT(:);
-		intTrials = numel(vecStartOnly);
-		%vecJitterPerTrial = dblJitterSize*dblUseMaxDur*((rand(size(vecStartOnly))-0.5)*2); %original zeta
-		vecJitterPerTrial = dblJitterSize*linspace(-dblUseMaxDur,dblUseMaxDur,intTrials)'; %new
-		matJitterPerTrial = nan(intTrials,intResampNum);
+	catch
 		for intResampling=1:intResampNum
-			matJitterPerTrial(:,intResampling) = vecJitterPerTrial(randperm(numel(vecJitterPerTrial)));
+			%% get random subsample
+			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
+			
+			%get temp offset
+			[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear,vecThisSpikeTimes] = ...
+				getTempOffsetOne(vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
+			
+			%assign data
+			cellRandT{intResampling} = vecThisSpikeTimes;
+			cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
+			vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));
 		end
-		try
-			parfor intResampling=1:intResampNum
-				%% get random subsample
-				vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
-				
-				%get temp offset
-				[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear,vecThisSpikeTimes] = ...
-					getTempOffsetOne(vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
-				
-				%assign data
-				cellRandT{intResampling} = vecThisSpikeTimes;
-				cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
-				vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));
-			end
-		catch
-			for intResampling=1:intResampNum
-				%% get random subsample
-				vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
-				
-				%get temp offset
-				[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear,vecThisSpikeTimes] = ...
-					getTempOffsetOne(vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
-				
-				%assign data
-				cellRandT{intResampling} = vecThisSpikeTimes;
-				cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
-				vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));
-			end
-		end
-		
-		%% calculate significance
-		[dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
-	end	
+	end
+	
+	%% calculate significance
+	[dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
 end
 

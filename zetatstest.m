@@ -1,6 +1,6 @@
-function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize,boolUseSuperResolution)
+function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize)
 	%zetatstest Calculates responsiveness index zeta for timeseries data
-	%syntax: [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,vecEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize,boolUseSuperResolution)
+	%syntax: [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,vecEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize)
 	%	input:
 	%	- vecTime [N x 1]: time (s) corresponding to entries in vecValue
 	%	- vecValue [N x 1]: data values (e.g., calcium imaging dF/F0)
@@ -12,7 +12,6 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 	%	- boolDirectQuantile; boolean, switch to use the empirical
 	%							null-distribution rather than the Gumbel approximation (default: false)
 	%	- dblJitterSize: scalar, sets the temporal jitter window relative to dblUseMaxDur (default: 2)
-	%	- boolUseSuperResolution: boolean, use super-resolution procedure (default: 1)
 	%
 	%	output:
 	%	- dblZetaP; Zenith of Event-based Time-locked Anomalies: responsiveness z-score (i.e., >2 is significant)
@@ -29,8 +28,10 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 	%		- matRandD; baseline temporal deviation matrix of jittered data
 	%
 	%Version history:
-	%1.0 - 2021 October 29
+	%0.9 - 2021 October 29
 	%	Created by Jorrit Montijn
+	%1.0 - 2022 January 31
+	%	Removed non-interpolating procedures [by JM]
 	
 	%% prep data
 	%ensure orientation
@@ -78,28 +79,16 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 		dblJitterSize = 2; %original:1
 	end
 	
-	%get boolUseSuperResolution
-	if ~exist('boolUseSuperResolution','var') || isempty(boolUseSuperResolution)
-		boolUseSuperResolution = 1;
-	end
-	
 	%sampling interval
 	dblSamplingInterval = median(diff(vecTime));
 	
 	%% build onset/offset vectors
 	vecEventStarts = matEventTimes(:,1);
 	
-	%% gettacezeta
-	if boolUseSuperResolution == 0
-		[vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-			calcTsZeta(vecTime,vecValue,vecEventStarts,dblSamplingInterval,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize);
-	elseif boolUseSuperResolution == 1
-		[vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-			calcTsZetaSR_interp(vecTime,vecValue,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize);
-	elseif boolUseSuperResolution == 2
-		[vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-			calcTsZetaSR(vecTime,vecValue,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize);
-	end
+	%% get timeseries zeta
+	[vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
+		calcTsZetaOne(vecTime,vecValue,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize);
+	
 	%get location
 	dblMaxDTime = vecRefT(intZETALoc);
 	dblD = vecRealDiff(intZETALoc);
