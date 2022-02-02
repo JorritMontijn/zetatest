@@ -109,7 +109,7 @@ function [vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,cellRa
 	end
 	
 	%% calculate significance
-	dblZetaP = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
+	[dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
 	%dblZETA = -norminv(((dblZetaP.*2)./(dblZetaP+1))/2);
 	%dblZetaP = (1-normcdf(dblZETA))*2;
 end
