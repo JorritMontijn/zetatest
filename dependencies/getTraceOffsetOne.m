@@ -17,12 +17,9 @@
 	matTracePerTrial(:,indRemPoints)=[];
 	vecMeanTrace = nanmean(matTracePerTrial,1)';
 	vecThisFrac = cumsum(vecMeanTrace) / sum(vecMeanTrace);
-	%vecM = nanmean(matTracePerTrial,1)';
-	%vecMeanTrace = cat(1,vecM(1),diff(vecM));
-	%vecThisFrac = cumsum(vecMeanTrace) / sum(vecMeanTrace);
 	
 	%get linear fractions
-	vecThisFracLinear = linspace(mean(vecMeanTrace),sum(vecMeanTrace),numel(vecMeanTrace))' / sum(vecMeanTrace);
+	vecThisFracLinear = vecRefT/max(vecRefT);
 	
 	%assign data
 	vecThisDiff = vecThisFrac - vecThisFracLinear;

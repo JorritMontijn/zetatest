@@ -36,7 +36,7 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	
 	%% set default values
 	if ~exist('intSmoothSd','var') || isempty(intSmoothSd)
-		intSmoothSd = 5;
+		intSmoothSd = 2;
 	end
 	if ~exist('dblBase','var') || isempty(dblBase)
 		dblBase = 1.5;
@@ -62,6 +62,13 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	[vecRealDiff,vecThisSpikeFracs,vecThisFracLinear,vecTime] = ...
 		getTempOffsetOne(vecSpikeTimes,vecEventStarts(:,1),dblUseMaxDur);
 	if numel(vecRealDiff) < 3
+		vecTime = [];
+		vecRate = [];
+		sIFR = struct;
+		sIFR.vecRate = vecRate;
+		sIFR.vecTime = vecTime;
+		sIFR.vecDiff = vecRealDiff;
+		sIFR.vecScale = [];
 		return
 	end
 	

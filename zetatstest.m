@@ -5,7 +5,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 	%	- vecTime [N x 1]: time (s) corresponding to entries in vecValue
 	%	- vecValue [N x 1]: data values (e.g., calcium imaging dF/F0)
 	%	- vecEventTimes [T x 1]: event on times (s), or [T x 2] including event off times
-	%	- dblUseMaxDur: float (s), ignore all values beyond this duration after stimulus onset
+	%	- dblUseMaxDur: scalar (s), ignore all values beyond this duration after stimulus onset
 	%								[default: median of trial start to trial start]
 	%	- intResampNum: integer, number of resamplings (default: 100)
 	%	- intPlot: integer, plotting switch (0=none, 1=traces only, 2=activity heat map as well) (default: 0)
@@ -200,7 +200,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 		end
 		fixfig
 		
-		if intPlot > 1 && boolUseSuperResolution == 1
+		if intPlot > 1
 			%set tol
 			dblSampInterval = median(diff(vecTime));
 			dblTol = dblSampInterval/100;
