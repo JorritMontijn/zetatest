@@ -5,14 +5,15 @@ The article describing the original ZETA-test has been published in eLife: https
 
 If you're looking for the original ZETA repository, you can find it here: https://github.com/JorritMontijn/ZETA
 
-Note on updates and maintenance: the functions provided in this repository are in different stages of development: the zetatest has been extensively tested on real and artificial data, and has been peer-reviewed, so we are confident whatever it produces is reliable and statistically sound. The time-series zetatstest has also been tested on a variety of artificial and real benchmarks and seems to perform better than t-tests and one-way ANOVAs, so we are also fairly confident of the zetatstest, but this method has not yet been peer-reviewed. The two-sample tests are still under active development, so you are welcome to try them out and let us know what you find of their performance, but we give no guarantees, so use these two-sample tests at your own risk. More information on these tests can be found in runExampleZETA.m and the help comments of the respective functions.
+Note on updates and maintenance: the functions provided in this repository are in different stages of development: the zetatest has been extensively tested on real and artificial data, and has been peer-reviewed, so we are confident whatever it produces is reliable and statistically sound. Compared to the getZeta.m in the original repository, this version has a somewhat different syntax, and adds a data-stitching step to ensure that time is contiguous. If your data was already contiguous, you should notice no difference, but if your events are more randomly distributed, you might get better performance with this version. 
+The time-series zetatstest has also been tested on a variety of artificial and real benchmarks and seems to perform better than t-tests and one-way ANOVAs, so we are also fairly confident of the zetatstest, but this method has not yet been peer-reviewed (preprint will be published before the summer). The two-sample tests are still under active development, so you are welcome to try them out and let us know what you find of their performance, but we make no promises as to their performance - it might well be possible we'll scrap them altogether, so use these two-sample tests at your own risk. More information on these tests can be found in runExampleZETA.m and the help comments of the respective functions.
 
  
 This repository contains five main functions:
 1) zetatest.m: Calculates the Zenith of Event-based Time-locked Anomalies (ZETA) for spike times of a single neuron. Outputs a p-value.
-2) zetatest2.m: Same as above, but for testing whether two neurons respond differently to the same stimulus; or whether one neuron responds differently to two sets of stimuli.
-3) zetatstest.m: Calculates the time-series version of ZETA, for data such as calcium imaging or EEG recordings.
-4) zetatstest2.m: Same as above, but for testing differences between two time-series data arrays.
+2) zetatstest.m: Calculates the time-series version of ZETA, for data such as calcium imaging or EEG recordings.
+3) zetatest2.m: Same as (1), but for testing whether two neurons respond differently to the same stimulus; or whether one neuron responds differently to two sets of stimuli. Still under construction.
+4) zetatstest2.m: Same as (3), but for testing differences between two time-series data arrays. Still under construction.
 5) getIFR.m: Calculates the instantaneous firing rate (IFR) without running the ZETA-test. Use this as you would a PSTH function.
 
 # Rationale for ZETA
