@@ -13,7 +13,7 @@ This repository contains five main functions:
 1) zetatest.m: Calculates the Zenith of Event-based Time-locked Anomalies (ZETA) for spike times of a single neuron. Outputs a p-value.
 2) zetatstest.m: Calculates the time-series version of ZETA, for data such as calcium imaging or EEG recordings.
 3) zetatest2.m: Same as (1), but for testing whether two neurons respond differently to the same stimulus; or whether one neuron responds differently to two sets of stimuli. Still under construction.
-4) zetatstest2.m: Same as (3), but for testing differences between two time-series data arrays. Still under construction.
+4) zetatstest2.m: Same as (2), but for testing differences between two time-series data arrays. Still under construction.
 5) getIFR.m: Calculates the instantaneous firing rate (IFR) without running the ZETA-test. Use this as you would a PSTH function.
 
 # Rationale for ZETA
