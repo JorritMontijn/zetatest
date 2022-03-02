@@ -72,7 +72,7 @@ function [vecPseudoTime,vecPseudoData,vecPseudoStartT] = getPseudoTimeSeries(vec
 		
 	end
 	
-	%add beginning
+	%% add beginning
 	dblT1 = vecTimestamps(intFirstSample);
 	intT0 = find(vecTimestamps > (dblT1 - dblWindowDur),1);
 	if ~isempty(intT0) && intFirstSample > 1
@@ -82,16 +82,17 @@ function [vecPseudoTime,vecPseudoData,vecPseudoStartT] = getPseudoTimeSeries(vec
 		cellPseudoData = cat(2,{vecData(vecSampAddBeginning)},cellPseudoData);
 	end
 	
-	%add end
+	%% add end
+	intLastUsedSample = find(vecTimestamps>(vecEventT(end)+dblWindowDur),1);
 	dblTn = vecTimestamps(intLastUsedSample);
-	intTn1 = find(vecTimestamps > (dblTn + dblWindowDur),1);
+	intTn1 = find(vecTimestamps > dblTn,1);
 	if ~isempty(intTn1)
-		vecSampAddEnd = (intLastUsedSample+1):intTn1;
+		vecSampAddEnd = intLastUsedSample:intTn1;
 		cellPseudoTime = cat(2,cellPseudoTime,{vecTimestamps(vecSampAddEnd) - vecTimestamps(vecSampAddEnd(1)) + dblStartNextAtT});
 		cellPseudoData = cat(2,cellPseudoData,{vecData(vecSampAddEnd)});
 	end
 	
-	%recombine into vector
+	%% recombine into vector
 	vecPseudoTime = cell2vec(cellPseudoTime);
 	vecPseudoData = cell2vec(cellPseudoData);
 end

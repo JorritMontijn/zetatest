@@ -78,15 +78,15 @@ function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeT
 		cellPseudoSpikeT = cat(2,{vecSpikeTimes(vecSampAddBeginning) - vecSpikeTimes(vecSampAddBeginning(1)) + dblPseudoT0 - dblStepBegin - range(vecSpikeTimes(vecSampAddBeginning))},cellPseudoSpikeT);
 	end
 	
-	%add end
+	%% add end
 	intTn = numel(vecSpikeTimes);
 	intLastUsedSample = find(vecSpikeTimes>(vecEventT(end)+dblWindowDur),1);
 	if ~isempty(intLastUsedSample) && intTn > intLastUsedSample
-		vecSampAddEnd = (intLastUsedSample+1):intTn;
+		vecSampAddEnd = intLastUsedSample:intTn;
 		cellPseudoSpikeT = cat(2,cellPseudoSpikeT,{vecSpikeTimes(vecSampAddEnd) - dblEventT + dblPseudoEventT + dblWindowDur});
 	end
 	
-	%recombine into vector
+	%% recombine into vector
 	vecPseudoSpikeTimes = cell2vec(cellPseudoSpikeT);
 end
 
