@@ -1,7 +1,7 @@
-function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize)
+function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch)
 	%calcZetaOne Calculates neuronal responsiveness index zeta
 	%[vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-	%	calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize)
+	%	calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch)
 	
 	%% check inputs and pre-allocate error output
 	vecSpikeT = [];
@@ -16,6 +16,9 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 	if ~exist('boolDirectQuantile','var') || isempty(boolDirectQuantile)
 		boolDirectQuantile = false;
 	end
+	if ~exist('boolStitch','var') || isempty(boolStitch)
+		boolStitch = true;
+	end
 	
 	%% reduce spikes
 	if size(vecEventStarts,2)>2,error([mfilename ':IncorrectMatrixForm'],'Incorrect input form for vecEventStarts; size must be [m x 1] or [m x 2]');end
@@ -28,7 +31,12 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 	end
 	
 	%% build pseudo data, stitching stimulus periods
-	[vecPseudoSpikeTimes,vecPseudoEventT] = getPseudoSpikeVectors(vecSpikeTimes,vecEventT,dblUseMaxDur);
+	if boolStitch
+		[vecPseudoSpikeTimes,vecPseudoEventT] = getPseudoSpikeVectors(vecSpikeTimes,vecEventT,dblUseMaxDur);
+	else
+		vecPseudoSpikeTimes = vecSpikeTimes;
+		vecPseudoEventT = vecEventT;
+	end
 	
 	%% run normal
 	%get data

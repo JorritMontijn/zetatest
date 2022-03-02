@@ -1,4 +1,4 @@
-function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTimes,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize)
+function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTimes,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize,boolStitch)
 	%zetatest Calculates neuronal responsiveness index zeta
 	%syntax: [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize)
 	%	input:
@@ -13,6 +13,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%	- boolDirectQuantile; boolean, switch to use the empirical null-distribution rather than the
 	%								Gumbel approximation (default: false) [Note: requires many resamplings!]
 	%	- dblJitterSize; scalar, sets the temporal jitter window relative to dblUseMaxDur (default: 2)
+	%	- boolStitch; boolean, use data-stitching to ensure continuous time (default: true)
 	%
 	%	output:
 	%	- dblZetaP; p-value based on Zenith of Event-based Time-locked Anomalies
@@ -86,6 +87,8 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%	Added stitching, changed name [by JM]
 	%3.1 - 11 Jan 2022
 	%	Updated syntax [by JM]
+	%3.2 - 2 Mar 2022
+	%	Fixed stitching bug for low spiking rates & variable ITIs; and added stitching switch [by JM]
 	
 	%% prep data
 	%ensure orientation
@@ -141,12 +144,17 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	if ~exist('dblJitterSize','var') || isempty(dblJitterSize)
 		dblJitterSize = 2;
 	end
+	%get boolStitch
+	if ~exist('boolStitch','var') || isempty(boolStitch)
+		boolStitch = true;
+	end
+	
 	
 	%% get zeta
 	vecEventStarts = matEventTimes(:,1);
 	if numel(vecEventStarts) > 1 && numel(vecSpikeTimes) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
 		[vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-			calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize);
+			calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch);
 	else
 		intZETALoc = nan;
 	end
