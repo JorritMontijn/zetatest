@@ -19,7 +19,7 @@
 	vecThisFrac = cumsum(vecMeanTrace) / sum(vecMeanTrace);
 	
 	%get linear fractions
-	vecThisFracLinear = vecRefT/max(vecRefT);
+	vecThisFracLinear = linspace(mean(vecMeanTrace),sum(vecMeanTrace),numel(vecMeanTrace))' / sum(vecMeanTrace);
 	
 	%assign data
 	vecThisDiff = vecThisFrac - vecThisFracLinear;
