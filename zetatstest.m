@@ -52,7 +52,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 	
 	%trial dur
 	if ~exist('dblUseMaxDur','var') || isempty(dblUseMaxDur)
-		dblUseMaxDur = median(diff(matEventTimes(:,1)));
+		dblUseMaxDur = min(diff(matEventTimes(:,1)));
 	end
 	if numel(dblUseMaxDur)>1
 		dblUseMaxDurTtest = dblUseMaxDur(2);
