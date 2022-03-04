@@ -84,12 +84,16 @@ function [vecPseudoTime,vecPseudoData,vecPseudoStartT] = getPseudoTimeSeries(vec
 	
 	%% add end
 	intLastUsedSample = find(vecTimestamps>(vecEventT(end)+dblWindowDur),1);
-	dblTn = vecTimestamps(intLastUsedSample);
-	intTn1 = find(vecTimestamps > dblTn,1);
-	if ~isempty(intTn1)
-		vecSampAddEnd = intLastUsedSample:intTn1;
-		cellPseudoTime = cat(2,cellPseudoTime,{vecTimestamps(vecSampAddEnd) - vecTimestamps(vecSampAddEnd(1)) + dblStartNextAtT});
-		cellPseudoData = cat(2,cellPseudoData,{vecData(vecSampAddEnd)});
+	if isempty(intLastUsedSample)
+		error([mfilename ':InsufficientSamples'],'dblMaxDur is too large: the tail of the final event would extend beyond the end of the time-series data. Please include more data, shorten dblMaxDur or remove the last event.');
+	else
+		dblTn = vecTimestamps(intLastUsedSample);
+		intTn1 = find(vecTimestamps > dblTn,1);
+		if ~isempty(intTn1)
+			vecSampAddEnd = intLastUsedSample:intTn1;
+			cellPseudoTime = cat(2,cellPseudoTime,{vecTimestamps(vecSampAddEnd) - vecTimestamps(vecSampAddEnd(1)) + dblStartNextAtT});
+			cellPseudoData = cat(2,cellPseudoData,{vecData(vecSampAddEnd)});
+		end
 	end
 	
 	%% recombine into vector
