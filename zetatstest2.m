@@ -1,6 +1,7 @@
 function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTime2,vecValue2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolPairwise,boolDirectQuantile,dblJitterSize)
 	%zetatstest2 Calculates difference in responsiveness index zeta for two timeseries
-	%syntax: [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTime2,vecValue2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolPairwise,boolDirectQuantile,dblJitterSize)
+	%syntax: [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTime2,vecValue2,matEventTimes2,...
+	%								dblUseMaxDur,intResampNum,intPlot,boolPairwise,boolDirectQuantile,dblJitterSize)
 	%	input:
 	%	- vecTime1 [N x 1]: time (s) corresponding to entries in vecValue1
 	%	- vecValue1 [N x 1]: data values (e.g., calcium imaging dF/F0)
@@ -9,10 +10,11 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	%	- vecValue2 [N x 1]: data values (e.g., calcium imaging dF/F0)
 	%	- vecEventTimes2 [T x 1]: event on times (s), or [T x 2] including event off times
 	%	- dblUseMaxDur: float (s), ignore all values beyond this duration after stimulus onset
-	%								[default: median of trial start to trial start]
+	%								[default: minimum of trial start to trial start]
 	%	- intResampNum: integer, number of resamplings (default: 100)
 	%	- intPlot: integer, plotting switch (0=none, 1=traces only, 2=activity heat map as well) (default: 0)
-	%	- boolPairwise: 0: unpaired test (e.g., same neuron in two contexts); or 1: trial-paired test (e.g., two simultaneously recorded neurons)
+	%	- boolPairwise: 0: unpaired test (e.g., same neuron in two contexts); or 1: trial-paired test 
+	%							(e.g., two simultaneously recorded neurons) (default: false)
 	%	- boolDirectQuantile; boolean, switch to use the empirical
 	%							null-distribution rather than the Gumbel approximation (default: false)
 	%	- dblJitterSize; scalar, sets the temporal jitter window relative to dblUseMaxDur (default: 2)
@@ -77,7 +79,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	
 	%get boolPairwise
 	if ~exist('boolPairwise','var') || isempty(boolPairwise)
-		boolPairwise = true; %original:1
+		boolPairwise = false; %original:1
 	end
 	
 	%get boolDirectQuantile
@@ -200,6 +202,10 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 			[h,dblMeanP,ci,stats]=ttest2(vecMu1,vecMu2);
 		end
 		dblMeanZ = -norminv(dblMeanP/2);
+	else
+		dblMeanZ = [];
+		vecBaseAct = [];
+		vecStimAct = [];
 	end
 	
 	%% plot
@@ -289,11 +295,11 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 			sZETA.dblMeanP = dblMeanP;
 			sZETA.vecMu1 = vecMu1;
 			sZETA.vecMu2 = vecMu2;
+			sZETA.vecMeanBase = vecStimAct;
+			sZETA.vecMeanStim = vecBaseAct;
 		end
 		sZETA.vecTime1 = vecTime1;
 		sZETA.vecD = vecRealDiff;
 		sZETA.cellRandDiff = cellRandDiff;
-		sZETA.vecMeanBase = vecStimAct;
-		sZETA.vecMeanStim = vecBaseAct;
 	end
 end
