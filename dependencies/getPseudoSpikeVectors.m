@@ -1,8 +1,12 @@
-function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeTimes,vecEventT,dblWindowDur)
+function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeTimes,vecEventT,dblWindowDur,boolDiscardEdges)
 	
 	%ensure sorting and alignment
 	vecSpikeTimes = sort(vecSpikeTimes(:));
 	vecEventT = sort(vecEventT(:));
+	
+	if ~exist('boolDiscardEdges','var') || isempty(boolDiscardEdges)
+		boolDiscardEdges = false;
+	end
 	
 	%% pre-allocate
 	intSamples = numel(vecSpikeTimes);
@@ -31,9 +35,9 @@ function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeT
 		
 		%check if beginning or end
 		if ~isempty(vecUseSamples)
-			if intTrial==1
+			if intTrial==1 && ~boolDiscardEdges
 				vecUseSamples = 1:vecUseSamples(end);
-			elseif intTrial==intTrials
+			elseif intTrial==intTrials && ~boolDiscardEdges
 				vecUseSamples = vecUseSamples(1):intSamples;
 			end
 		end
@@ -72,7 +76,7 @@ function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeT
 	end
 	
 	%% add beginning
-	if intFirstSample > 1
+	if ~boolDiscardEdges && intFirstSample > 1
 		dblStepBegin = vecSpikeTimes(intFirstSample) - vecSpikeTimes(intFirstSample-1);
 		vecSampAddBeginning = 1:(intFirstSample-1);
 		cellPseudoSpikeT = cat(2,{vecSpikeTimes(vecSampAddBeginning) - vecSpikeTimes(vecSampAddBeginning(1)) + dblPseudoT0 - dblStepBegin - range(vecSpikeTimes(vecSampAddBeginning))},cellPseudoSpikeT);
@@ -81,7 +85,7 @@ function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeT
 	%% add end
 	intTn = numel(vecSpikeTimes);
 	intLastUsedSample = find(vecSpikeTimes>(vecEventT(end)+dblWindowDur),1);
-	if ~isempty(intLastUsedSample) && intTn > intLastUsedSample
+	if ~boolDiscardEdges && ~isempty(intLastUsedSample) && intTn > intLastUsedSample
 		vecSampAddEnd = intLastUsedSample:intTn;
 		cellPseudoSpikeT = cat(2,cellPseudoSpikeT,{vecSpikeTimes(vecSampAddEnd) - dblEventT + dblPseudoEventT + dblWindowDur});
 	end
