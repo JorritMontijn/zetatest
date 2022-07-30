@@ -76,7 +76,7 @@ function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeT
 	end
 	
 	%% add beginning
-	if ~boolDiscardEdges && intFirstSample > 1
+	if ~boolDiscardEdges && ~isempty(intFirstSample) && intFirstSample > 1
 		dblStepBegin = vecSpikeTimes(intFirstSample) - vecSpikeTimes(intFirstSample-1);
 		vecSampAddBeginning = 1:(intFirstSample-1);
 		cellPseudoSpikeT = cat(2,{vecSpikeTimes(vecSampAddBeginning) - vecSpikeTimes(vecSampAddBeginning(1)) + dblPseudoT0 - dblStepBegin - range(vecSpikeTimes(vecSampAddBeginning))},cellPseudoSpikeT);
