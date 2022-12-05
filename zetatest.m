@@ -89,6 +89,8 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%	Updated syntax [by JM]
 	%3.2 - 2 Mar 2022
 	%	Fixed stitching bug for low spiking rates & variable ITIs; and added stitching switch [by JM]
+	%3.2.1 - 5 Dec 2022
+	%	Bug fix when matEventTimes is empty [by JM]
 	
 	%% prep data
 	%ensure orientation
@@ -149,14 +151,14 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 		boolStitch = true;
 	end
 	
-	
 	%% get zeta
-	vecEventStarts = matEventTimes(:,1);
-	if numel(vecEventStarts) > 1 && numel(vecSpikeTimes) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
+	if numel(matEventTimes) > 1 && numel(vecSpikeTimes) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
+		vecEventStarts = matEventTimes(:,1);
 		[vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
 			calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch);
 	else
 		intZETALoc = nan;
+		vecEventStarts = [];
 	end
 	
 	%% build placeholder outputs
