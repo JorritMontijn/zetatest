@@ -1,6 +1,6 @@
-function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intSmoothSd,dblMinScale,dblBase,intPlot)
+function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intSmoothSd,dblMinScale,dblBase,intPlot,boolUseParallel)
 	%getIFR Returns instaneous firing rate. Syntax:
-	%   [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intSmoothSd,dblMinScale,dblBase,intPlot)
+	%   [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intSmoothSd,dblMinScale,dblBase,intPlot,boolUseParallel)
 	%Required input:
 	%	- vecSpikeTimes [S x 1]: spike times (s)
 	%	- vecEventStarts [T x 1]: event on times (s), or [T x 2] including event off times
@@ -22,7 +22,7 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	%		- vecDiff;
 	%		- vecScale; 
 	%
-	%v1.4 - 16 February 2023
+	%v1.5 - 26 May 2023
 	
 	%Version history:
 	%1.0 - 24 January 2019
@@ -35,6 +35,8 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	%	Fixed bug [by JM]
 	%1.4 - 16 February 2023
 	%	Correction: updated function description to real default values [by JM]
+	%1.5 - 26 May 2023
+	%	Faster computation time, changed default parallel-processing behaviour [by JM]
 	
 	%% set default values
 	if ~exist('intSmoothSd','var') || isempty(intSmoothSd)
@@ -52,17 +54,24 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	if ~exist('intPlot','var') || isempty(intPlot)
 		intPlot = 1;
 	end
+	if ~exist('boolUseParallel','var') || isempty(boolUseParallel)
+		objPool = gcp('nocreate');
+		if isempty(objPool) || ~isprop(objPool,'NumWorkers') || objPool.NumWorkers < 4
+			boolUseParallel = false;
+		else
+			boolUseParallel = true;
+		end
+	end
 	if size(vecEventStarts,2) > 2
 		vecEventStarts = vecEventStarts';
 	end
 	
-	%% prepare normalized spike times
-	vecTime = getSpikeT(vecSpikeTimes,vecEventStarts,dblUseMaxDur);
-	intSpikes = numel(vecTime);
-	
 	%% get difference from uniform
 	[vecRealDiff,vecThisSpikeFracs,vecThisFracLinear,vecTime] = ...
 		getTempOffsetOne(vecSpikeTimes,vecEventStarts(:,1),dblUseMaxDur);
+	intSpikes = numel(vecTime);
+	
+	%% assign dummy output
 	if numel(vecRealDiff) < 3
 		vecTime = [];
 		vecRate = [];
@@ -77,7 +86,7 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	%% get multi-scale derivative
 	intMaxRep = size(vecEventStarts,1);
 	dblMeanRate = (intSpikes/(dblUseMaxDur*intMaxRep));
-	[vecRate,sMSD] = getMultiScaleDeriv(vecTime,vecRealDiff,intSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur);
+	[vecRate,sMSD] = getMultiScaleDeriv(vecTime,vecRealDiff,intSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur,boolUseParallel);
 	
 	%% build output
 	if nargout > 1

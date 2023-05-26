@@ -53,7 +53,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%		3) Peak time of instantaneous firing rate
 	%		4) Onset time of above peak, defined as the first crossing of peak half-height
 	%
-	%v3.1 - 11 Jan 2022
+	%v3.2.2 - 26 May 2023
 	
 	%Version history:
 	%0.9 - 27 June 2019
@@ -91,6 +91,8 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%	Fixed stitching bug for low spiking rates & variable ITIs; and added stitching switch [by JM]
 	%3.2.1 - 5 Dec 2022
 	%	Bug fix when matEventTimes is empty [by JM]
+	%3.2.2 - 26 May 2023
+	%	Faster computation time for IFR calculation - parfor enabled by default when parpool is active [by JM]
 	
 	%% prep data
 	%ensure orientation

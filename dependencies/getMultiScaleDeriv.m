@@ -13,7 +13,7 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 	%						If set to 1, it will plot into the current axes if empty, or create a new figure if ~isempty(get(gca,'Children'))
 	%	- dblMeanRate: mean spiking rate to normalize vecRate (optional)
 	%	- dblUseMaxDur: trial duration to normalize vecRate (optional)
-	%	- boolUseParallel: use parallel processing (optional) [default: 0; can decrease performance, so be cautious!]
+	%	- boolUseParallel: use parallel processing (optional) [default: true if pool is active, otherwise false; can decrease performance, so be cautious!]
 	%
 	%Outputs:
 	%	- vecRate; Instantaneous spiking rate
@@ -34,6 +34,9 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 	%	Changed plotting behavior to create new figure when intPlot==1 if gca is not empty [by JM]
 	%1.1.2 - May 17 2023
 	%	Compiled calcMSD() as mex-file & modified parfor to increase computation speed [by JM]
+	%1.1.3 - May 26 2023
+	%	Changed default parallel-processing behaviour & compiled calcSingleMSD() as mex-file. 
+	%	GPU computation is now within try-catch block, so CPU-only pipeline works as well [by JM]
 	
 	%% set default values
 	if ~exist('intSmoothSd','var') || isempty(intSmoothSd)
@@ -58,7 +61,12 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 		dblUseMaxDur = range(vecT);
 	end
 	if ~exist('boolUseParallel','var') || isempty(boolUseParallel)
-		boolUseParallel = false;
+		objPool = gcp('nocreate');
+		if isempty(objPool) || ~isprop(objPool,'NumWorkers') || objPool.NumWorkers < 4
+			boolUseParallel = false;
+		else
+			boolUseParallel = true;
+		end
 	end
 	
 	%% reorder just in case
@@ -77,7 +85,7 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 		parfor intScaleIdx=1:intScaleNum
 			dblScale = vecScale(intScaleIdx);
 			%run through all points
-			matMSD(:,intScaleIdx) = calcSingleMSD(dblScale,vecT,vecV);
+			matMSD(:,intScaleIdx) = calcSingleMSD_mex(dblScale,vecT,vecV);
 		end
 	else
 		try
@@ -97,7 +105,11 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 		matMSD = padarray(matMSD,floor(size(vecFilt)/2),'replicate');
 		
 		%filter
-		matMSD = conv2(gpuArray(matMSD),vecFilt,'valid');
+		try
+			matMSD = conv2(gpuArray(matMSD),gpuArray(vecFilt),'valid');
+		catch
+			matMSD = conv2(matMSD,vecFilt,'valid');
+		end
 		
 		%title
 		strTitle = 'Smoothed MSDs';
@@ -106,7 +118,7 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 		strTitle = 'MSDs';
 	end
 	%mean
-	vecM = mean(matMSD,2);
+	vecM = mean(gather(matMSD),2);
 	
 	%weighted average of vecM by inter-spike intervals
 	dblMeanM = (1/dblUseMaxDur)*sum(((vecM(1:(end-1)) + vecM(2:end))/2).*diff(vecT));
