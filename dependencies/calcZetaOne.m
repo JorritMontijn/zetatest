@@ -1,7 +1,7 @@
-function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch)
+function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,boolUseParallel)
 	%calcZetaOne Calculates neuronal responsiveness index zeta
 	%[vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-	%	calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch)
+	%	calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,boolUseParallel)
 	
 	%% check inputs and pre-allocate error output
 	vecSpikeT = [];
@@ -18,6 +18,14 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 	end
 	if ~exist('boolStitch','var') || isempty(boolStitch)
 		boolStitch = true;
+	end
+	if ~exist('boolUseParallel','var') || isempty(boolUseParallel)
+		objPool = gcp('nocreate');
+		if isempty(objPool) || ~isprop(objPool,'NumWorkers') || objPool.NumWorkers < 4
+			boolUseParallel = false;
+		else
+			boolUseParallel = true;
+		end
 	end
 	
 	%% reduce spikes
@@ -61,7 +69,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 	for intResampling=1:intResampNum
 		matJitterPerTrial(:,intResampling) = vecJitterPerTrial(randperm(numel(vecJitterPerTrial)));
 	end
-	try
+	if boolUseParallel
 		parfor intResampling=1:intResampNum
 			%% get random subsample
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
@@ -75,7 +83,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 			cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
 			vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));
 		end
-	catch
+	else
 		for intResampling=1:intResampNum
 			%% get random subsample
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);

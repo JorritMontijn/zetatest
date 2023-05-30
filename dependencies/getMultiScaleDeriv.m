@@ -37,6 +37,8 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 	%1.1.3 - May 26 2023
 	%	Changed default parallel-processing behaviour & compiled calcSingleMSD() as mex-file. 
 	%	GPU computation is now within try-catch block, so CPU-only pipeline works as well [by JM]
+	%1.1.4 - May 30 2023
+	%	Removed artificial points at t=0 and t=dblUseMaxDur [by JM]
 	
 	%% set default values
 	if ~exist('intSmoothSd','var') || isempty(intSmoothSd)
@@ -73,6 +75,9 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 	[vecT,vecReorder] = sort(vecT(:),'ascend');
 	vecV = vecV(vecReorder);
 	vecV = vecV(:);
+	indRem = vecT==0 | vecT==dblUseMaxDur;%points at 0 and 1 are artificial
+	vecT(indRem) = [];
+	vecV(indRem) = [];
 	
 	%% get multi-scale derivative
 	dblMaxScale = log(max(vecT)/10) / log(dblBase);
