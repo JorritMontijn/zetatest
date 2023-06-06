@@ -39,6 +39,8 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 	%	GPU computation is now within try-catch block, so CPU-only pipeline works as well [by JM]
 	%1.1.4 - May 30 2023
 	%	Removed artificial points at t=0 and t=dblUseMaxDur [by JM]
+	%1.2 - June 6 2023
+	%	Fixed small temporal asymmetry of MSD calculation [by JM]
 	
 	%% set default values
 	if ~exist('intSmoothSd','var') || isempty(intSmoothSd)
@@ -83,10 +85,10 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 	dblMaxScale = log(max(vecT)/10) / log(dblBase);
 	vecExp = dblMinScale:dblMaxScale;
 	vecScale=dblBase.^vecExp;
+	intScaleNum = numel(vecScale);
+	intN = numel(vecT);
+	matMSD = zeros(intN,intScaleNum);
 	if boolUseParallel
-		intScaleNum = numel(vecScale);
-		intN = numel(vecT);
-		matMSD = zeros(intN,intScaleNum);
 		parfor intScaleIdx=1:intScaleNum
 			dblScale = vecScale(intScaleIdx);
 			%run through all points
@@ -94,9 +96,17 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 		end
 	else
 		try
-			matMSD = calcMSD_mex(vecScale,vecT,vecV);
+			for intScaleIdx=1:intScaleNum
+				dblScale = vecScale(intScaleIdx);
+				%run through all points
+				matMSD(:,intScaleIdx) = calcSingleMSD_mex(dblScale,vecT,vecV);
+			end
 		catch
-			matMSD = calcMSD(vecScale,vecT,vecV);
+			for intScaleIdx=1:intScaleNum
+				dblScale = vecScale(intScaleIdx);
+				%run through all points
+				matMSD(:,intScaleIdx) = calcSingleMSD(dblScale,vecT,vecV);
+			end
 		end
 	end
 	
@@ -185,62 +195,32 @@ function vecMSD = calcSingleMSD(dblScale,vecT,vecV)
 		dblT = vecT(intS);
 		dblMinEdge = dblT - dblScale/2;
 		dblMaxEdge = dblT + dblScale/2;
-		intIdxMinT = find(vecT > dblMinEdge,1,'first');
+		indCompMin = vecT > dblMinEdge;
+		intIdxMinT = find(indCompMin,1,'first');
 		if isempty(intIdxMinT)
 			intIdxMinT=1;
 		else
 			intIdxMinT = intIdxMinT(1);
 		end
-		intIdxMaxT = find(vecT > dblMaxEdge,1,'first');
+		indCompMax = vecT > dblMaxEdge;
+		intIdxMaxT = find(indCompMax,1,'first');
 		if isempty(intIdxMaxT)
 			intIdxMaxT=intN;
 		else
-			intIdxMaxT = intIdxMaxT(1);
+			intIdxMaxT = intIdxMaxT(1)-1;
 		end
-		if (intIdxMinT == intIdxMaxT) && (intIdxMinT > 1),intIdxMinT=intIdxMaxT-1;end
-		dbl_dT = max([dblScale (vecT(intIdxMaxT) - vecT(intIdxMinT))]);
-		dblD = (vecV(intIdxMaxT) - vecV(intIdxMinT))/dbl_dT;
+		if (intIdxMinT > intIdxMaxT)
+			dblD=0;
+		else
+			if (intIdxMinT == intIdxMaxT) && (intIdxMinT > 1) && (intIdxMinT < intN)
+				intIdxMaxT=intIdxMinT+1;
+				intIdxMinT=intIdxMinT-1;
+			end
+			dbl_dT = max([dblScale (vecT(intIdxMaxT) - vecT(intIdxMinT))]);
+			dblD = (vecV(intIdxMaxT) - vecV(intIdxMinT))/dbl_dT;
+		end
 		
 		%select points within window
 		vecMSD(intS) = dblD;
 	end
-end
-function matMSD = calcMSD(vecScale,vecT,vecV)
-	intScaleNum = numel(vecScale);
-	intN = numel(vecT);
-	matMSD = zeros(intN,intScaleNum);
-	for intScaleIdx=1:intScaleNum
-		dblScale = vecScale(intScaleIdx);
-		
-		%run through all points
-		for intS=1:intN
-			%select points within window
-			dblT = vecT(intS);
-			dblMinEdge = dblT - dblScale/2;
-			dblMaxEdge = dblT + dblScale/2;
-			intIdxMinT = find(vecT > dblMinEdge,1);
-			if isempty(intIdxMinT),intIdxMinT=1;end
-			intIdxMaxT = find(vecT > dblMaxEdge,1);
-			if isempty(intIdxMaxT),intIdxMaxT=intN;end
-			if intIdxMinT == intIdxMaxT && intIdxMinT > 1,intIdxMinT=intIdxMaxT-1;end
-			dbl_dT = max([dblScale (vecT(intIdxMaxT) - vecT(intIdxMinT))]);
-			dblD = (vecV(intIdxMaxT) - vecV(intIdxMinT))/dbl_dT;
-			
-			%select points within window
-			matMSD(intS,intScaleIdx) = dblD;
-		end
-	end
-end
-function dblD = getD(dblScale,intS,intN,vecT,vecV)
-	%select points within window
-	dblT = vecT(intS);
-	dblMinEdge = dblT - dblScale/2;
-	dblMaxEdge = dblT + dblScale/2;
-	intIdxMinT = find(vecT > dblMinEdge,1);
-	if isempty(intIdxMinT),intIdxMinT=1;end
-	intIdxMaxT = find(vecT > dblMaxEdge,1);
-	if isempty(intIdxMaxT),intIdxMaxT=intN;end
-	if intIdxMinT == intIdxMaxT && intIdxMinT > 1,intIdxMinT=intIdxMaxT-1;end
-	dbl_dT = max([dblScale (vecT(intIdxMaxT) - vecT(intIdxMinT))]);
-	dblD = (vecV(intIdxMaxT) - vecV(intIdxMinT))/dbl_dT;
 end

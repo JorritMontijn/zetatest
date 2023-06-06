@@ -37,6 +37,8 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	%	Correction: updated function description to real default values [by JM]
 	%1.5 - 26 May 2023
 	%	Faster computation time, changed default parallel-processing behaviour [by JM]
+	%1.6 - 6 June 2023
+	%	Fixed mismatch of vecTime/vecRate after last update [by JM]
 	
 	%% set default values
 	if ~exist('intSmoothSd','var') || isempty(intSmoothSd)
