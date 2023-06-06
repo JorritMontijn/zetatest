@@ -57,7 +57,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%Note: zetatest will use parallel computing if you have an active worker pool; if not, it will
 	%not start a parallel pool itself.
 	%
-	%v3.2.3 - 30 May 2023
+	%v3.4 - 30 May 2023
 	
 	%Version history:
 	%0.9 - 27 June 2019
@@ -95,9 +95,9 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%	Fixed stitching bug for low spiking rates & variable ITIs; and added stitching switch [by JM]
 	%3.2.1 - 5 Dec 2022
 	%	Bug fix when matEventTimes is empty [by JM]
-	%3.2.2 - 26 May 2023
+	%3.3 - 26 May 2023
 	%	Faster computation time for IFR calculation - parfor enabled by default when parpool is active [by JM]
-	%3.2.3 - 30 May 2023
+	%3.4 - 30 May 2023
 	%	Changed parallel pool behaviour for zetatest as well: parfor enabled by default when parpool is active [by JM]
 	%	Small changes:  getTempOffsetOne.m now adds minimal jitter to duplicate spikes rather than removing them, 
 	%					getMultiScaleDeriv.m now discards the artificial begin/end points

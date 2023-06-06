@@ -87,6 +87,7 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	intMaxRep = size(vecEventStarts,1);
 	dblMeanRate = (intSpikes/(dblUseMaxDur*intMaxRep));
 	[vecRate,sMSD] = getMultiScaleDeriv(vecTime,vecRealDiff,intSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur,boolUseParallel);
+	vecTime = sMSD.vecT;
 	
 	%% build output
 	if nargout > 1
