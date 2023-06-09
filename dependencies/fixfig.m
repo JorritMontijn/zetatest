@@ -1,5 +1,9 @@
 function fixfig(handle,boolMakeActive,dblLineWidth,dblFontSize)
 	
+	%flush
+	drawnow;
+	pause(1e-3);
+	
 	%inputs
 	if ~exist('handle','var') || isempty(handle)
 		handle=gcf;
@@ -58,5 +62,6 @@ function fixfig(handle,boolMakeActive,dblLineWidth,dblFontSize)
 				set(vecChildren(intChild),'Linewidth',dblLineWidth);end %change default linewidth to 2
 		end
 	end
+	drawnow;
 end
 
