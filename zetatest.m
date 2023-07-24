@@ -57,7 +57,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%Note: zetatest will use parallel computing if you have an active worker pool; if not, it will
 	%not start a parallel pool itself.
 	%
-	%v3.5 - 6 June 2023
+	%v3.5.1 - 24 July 2023
 	
 	%Version history:
 	%0.9 - 27 June 2019
@@ -104,6 +104,8 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%					zetatest now calculates the IFR when the 3rd output (sRate) is requested
 	%3.5 - 6 June 2023
 	%	Fixed IFR bug (vecTime/vecRate mismatch) introduced in 3.4, and fixed temporal asymmetry in IFR calculation [by JM]
+	%3.5.1 - 24 July 2023
+	%	Added isaxes() dependency file, and fixed parallel processing bug for non-windows systems [by JM]
 	
 	%% prep data
 	%ensure orientation
