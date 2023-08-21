@@ -1,6 +1,6 @@
 function [dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile)
-	%UNTITLED Summary of this function goes here
-	%   Detailed explanation goes here
+	%getZetaP Calculates a p-value given the variables underlying the zeta-test
+	%   [dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile)
 	
 	%% calculate significance
 	%find highest peak and retrieve value

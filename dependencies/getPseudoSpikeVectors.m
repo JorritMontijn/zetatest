@@ -27,7 +27,7 @@ function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeT
 			intStartSample = [];
 		end
 		if isempty(intEndSample)
-			intEndSample = intStartSample;
+			intEndSample = numel(vecSpikeTimes);
 		end
 		vecEligibleSamples = intStartSample:intEndSample;
 		indRemSamples = (vecEligibleSamples <= 0) | (vecEligibleSamples > intSamples);

@@ -106,6 +106,9 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%	Fixed IFR bug (vecTime/vecRate mismatch) introduced in 3.4, and fixed temporal asymmetry in IFR calculation [by JM]
 	%3.5.1 - 24 July 2023
 	%	Added isaxes() dependency file, and fixed parallel processing bug for non-windows systems [by JM]
+    %3.5.2 - 21 August 2023
+    %   Made some minor changes to produce deterministic output identical to the python version 
+    %   Fixed a bug in getPseudoSpikeVectors that could discard some spikes in the final trial [by JM]
 	
 	%% prep data
 	%ensure orientation
