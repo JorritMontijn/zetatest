@@ -70,6 +70,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
         vecRandPerm = randperm(numel(vecJitterPerTrial),numel(vecJitterPerTrial));
         matJitterPerTrial(:,intResampling) = vecJitterPerTrial(vecRandPerm);
     end
+    
     %% this part is only to check if matlab and python give the same exact results
     % unfortunately matlab's randperm() and numpy's np.random.permutation give different outputs even with
     % identical seeds and identical random number generators, so I've had to load in a table of random values here...

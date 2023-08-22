@@ -1,12 +1,12 @@
-function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur,boolUseParallel)
+function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur,boolUseParallel)
 	%getMultiScaleDeriv Returns multi-scale derivative. Syntax:
-	%   [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur,boolUseParallel)
+	%   [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur,boolUseParallel)
 	%Required input:
 	%	- vecT [N x 1]: timestamps (e.g., spike times)
 	%	- vecV [N x 1]: values (e.g., z-scores)
 	%
 	%Optional inputs:
-	%	- intSmoothSd: Gaussian SD of smoothing kernel (in # of samples) [default: 0]
+	%	- dblSmoothSd: Gaussian SD of smoothing kernel (in # of samples) [default: 0]
 	%	- dblMinScale: minimum derivative scale in seconds [default: 1/1000]
 	%	- dblBase: base for exponential scale step size [default: 1.5]
 	%	- intPlot: integer, plotting switch (0=none, 1=plot rates, 2=subplot 5&6 of [2 3]) [default: 0].
@@ -44,10 +44,13 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 	%1.2.1 - July 24 2023
 	%	Fixed crash if mex-file is unusable (i.e., non-windows systems) and parallel processing is
 	%	requested [by JM] 
+    %1.2.2 - August 22 2023
+	%	Changed max scale from B log(max(vecT)/10) to B log(range(vecT)/10); shouldn't have an
+    %	effect in most cases, as min(vecT) is always 0 unless this function is used directly [by JM] 
 
 	%% set default values
-	if ~exist('intSmoothSd','var') || isempty(intSmoothSd)
-		intSmoothSd = 0;
+	if ~exist('dblSmoothSd','var') || isempty(dblSmoothSd)
+		dblSmoothSd = 0;
 	end
 	if ~exist('dblBase','var') || isempty(dblBase)
 		dblBase = 1.5;
@@ -85,7 +88,7 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 	vecV(indRem) = [];
 
 	%% get multi-scale derivative
-	dblMaxScale = log(max(vecT)/10) / log(dblBase);
+	dblMaxScale = log(range(vecT)/10) / log(dblBase);
 	vecExp = dblMinScale:dblMaxScale;
 	vecScale=dblBase.^vecExp;
 	intScaleNum = numel(vecScale);
@@ -124,8 +127,8 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,intSmoothSd,dblMinScale,d
 
 
 	%% smoothing
-	if intSmoothSd > 0
-		vecFilt = normpdf(-2*(intSmoothSd):2*intSmoothSd,0,intSmoothSd)';
+	if dblSmoothSd > 0
+		vecFilt = normpdf(-2*ceil(dblSmoothSd):2*ceil(dblSmoothSd),0,dblSmoothSd)';
 		vecFilt = vecFilt./sum(vecFilt);
 		%pad array
 		matMSD = padarray(matMSD,floor(size(vecFilt)/2),'replicate');

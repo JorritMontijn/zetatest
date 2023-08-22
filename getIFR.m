@@ -5,7 +5,7 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	%	- vecSpikeTimes [S x 1]: spike times (s)
 	%	- vecEventStarts [T x 1]: event on times (s), or [T x 2] including event off times
 	%	- dblUseMaxDur: float (s), ignore all spikes beyond this duration after stimulus onset
-	%								[default: median of trial start to trial start]
+	%								[default: min of trial start to trial start]
 	%
 	%Optional inputs:
 	%	- intSmoothSd: Gaussian SD of smoothing kernel (in # of bins) [default: 2]
@@ -39,6 +39,8 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	%	Faster computation time, changed default parallel-processing behaviour [by JM]
 	%1.6 - 6 June 2023
 	%	Fixed mismatch of vecTime/vecRate after last update [by JM]
+	%1.7 - 22 August 2023
+	%	Changed default dblUseMaxDur to min instead of median ITI to match zetatest default  [by JM]
 	
 	%% set default values
 	if ~exist('intSmoothSd','var') || isempty(intSmoothSd)
@@ -51,7 +53,7 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 		dblMinScale = round(log(1/1000) / log(dblBase));
 	end
 	if ~exist('dblUseMaxDur','var') || isempty(dblUseMaxDur)
-		dblUseMaxDur = median(diff(vecEventStarts(:,1)));
+		dblUseMaxDur = min(diff(vecEventStarts(:,1)));
 	end
 	if ~exist('intPlot','var') || isempty(intPlot)
 		intPlot = 1;

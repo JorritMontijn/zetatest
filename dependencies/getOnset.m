@@ -1,6 +1,6 @@
 function [dblOnset,dblValue,dblBaseVal,dblPeakT,dblPeakVal] = getOnset(vecData,vecT,dblPeakT,vecRestrictRange)
 	%getOnset Returns peak onset. Syntax:
-	%    [dblOnset,dblValue] = getOnset(vecData,vecT,dblPeakT,vecRestrictRange)
+	%    [dblOnset,dblValue,dblBaseVal,dblPeakT,dblPeakVal] = getOnset(vecData,vecT,dblPeakT,vecRestrictRange)
 	%
 	%Required input:
 	%	- vecData [N x 1]: values
@@ -17,7 +17,9 @@ function [dblOnset,dblValue,dblBaseVal,dblPeakT,dblPeakVal] = getOnset(vecData,v
 	%Version history:
 	%1.0 - February 26 2020
 	%	Created by Jorrit Montijn
-	
+	%2.0 - August 22 2023
+    %   Now actually uses dblPeakT [by JM]
+
 	%%
 	%check inputs
 	if ~exist('vecT','var') || isempty(vecT)
@@ -30,20 +32,27 @@ function [dblOnset,dblValue,dblBaseVal,dblPeakT,dblPeakVal] = getOnset(vecData,v
 	%remove time points outside restricted range
 	indRemove = vecT < vecRestrictRange(1) | vecT > vecRestrictRange(end);
 	vecCropT = vecT(~indRemove);
-	vecDataZ = vecData(~indRemove);
+	vecDataCropped = vecData(~indRemove);
 	
-	%calculate first timepoint crossing half-height of peak 
-	[dblPeakVal,intPeakT] = max(vecDataZ);
-	dblPeakT = vecT(intPeakT);
-	dblBaseVal = vecDataZ(1);
+	%find peak if none supplied
+    if ~exist('dblPeakT','var') || isempty(dblPeakT) 
+        [dblPeakVal,intPeakT] = max(vecDataCropped);
+	    dblPeakT = vecT(intPeakIdx);
+    else
+        intPeakT = find(vecCropT > dblPeakT,1,'first');
+    end
+    dblPeakVal = vecDataCropped(intPeakT);
+	
+    %calculate first timepoint crossing half-height of peak 
+	dblBaseVal = vecDataCropped(1);
 	dblThresh = (dblPeakVal - dblBaseVal)/2 + dblBaseVal;
 	if dblThresh > 0
-		intOnsetIdx = find(vecDataZ >= dblThresh,1,'first');
+		intOnsetIdx = find(vecDataCropped >= dblThresh,1,'first');
 	else
-		intOnsetIdx = find(vecDataZ <= dblThresh,1,'first');
+		intOnsetIdx = find(vecDataCropped <= dblThresh,1,'first');
 	end
 	dblOnset = vecCropT(intOnsetIdx);
-	dblValue = vecData(find(vecT > dblOnset,1));
+	dblValue = vecDataCropped(intOnsetIdx);
 	
 	%check if empty
 	if isempty(intOnsetIdx)
