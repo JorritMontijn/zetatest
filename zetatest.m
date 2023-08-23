@@ -331,7 +331,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%% calculate IFR statistics
 	if ~isempty(sRate) && intLatencyPeaks > 0
 		%get IFR peak
-		[dblPeakRate,dblPeakTime,dblPeakWidth,vecPeakStartStop,intPeakLoc,vecPeakStartStopIdx] = getPeak(vecRate,vecSpikeT,vecRestrictRange);
+		[dblPeakRate,dblPeakTime,dblPeakWidth,vecPeakStartStop,intPeakLoc,vecPeakStartStopIdx] = getPeak(vecRate,sRate.vecT,vecRestrictRange);
 		sRate.dblPeakRate = dblPeakRate;
 		sRate.dblPeakTime = dblPeakTime;
 		sRate.dblPeakWidth = dblPeakWidth;
@@ -344,7 +344,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 			%assign array data
 			if intLatencyPeaks > 3
 				%get onset
-				[dblOnset,dblOnsetVal] = getOnset(vecRate,vecSpikeT,dblPeakTime,vecRestrictRange);
+				[dblOnset,dblOnsetVal] = getOnset(vecRate,sRate.vecT,dblPeakTime,vecRestrictRange);
 				sRate.dblOnset = dblOnset;
 				vecLatencies = [dblMaxDTime dblMaxDTimeInvSign dblPeakTime dblOnset];
 				vecLatencyVals = [vecRate(intZETALoc) vecRate(intPeakLocInvSign) vecRate(intPeakLoc) dblOnsetVal];
