@@ -77,6 +77,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
     boolTest = false;
     if boolTest
         fprintf('Loading deterministic jitter data for comparison with python\n')
+        warning([mfilename ':DebugMode'],'set boolTest to false in calcZetaOne.m to suppress this warning')
         load('F:\Code\Python\zetapy\unit_tests\matJitterPerTrial.mat');
 
         %reset rng

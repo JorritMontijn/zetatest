@@ -156,17 +156,19 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 	vecRate = dblMeanRate * ((vecM + 1/dblUseMaxDur)/(dblMeanM + 1/dblUseMaxDur));
 
 	%% plot
+    vecHandles = [];
 	if intPlot == 1
 		if ~isempty(get(gca,'Children'))
 			figure;
-		end
+        end
+        vecHandles(1) = gca;
 		stairs(vecT,vecRate)
 		xlabel('Time after event (s)');
 		ylabel(strLabelY);
 		title(sprintf('Peri Event Plot (PEP)'));
 		fixfig
 	elseif intPlot > 1
-		subplot(2,3,5);
+		vecHandles(1) = subplot(2,3,5);
 		imagesc(matMSD');
 		set(gca,'ytick',[]);
 		ylabel(sprintf('Scale (s) (%.1es - %.1es)',vecScale(1),vecScale(end)));
@@ -175,12 +177,12 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 		fixfig
 		grid off
 
-		subplot(2,3,6);
+		vecHandles(2) = subplot(2,3,6);
 		if numel(vecT) > 10000
 			vecSubset = round(linspace(1,numel(vecT),10000));
 			plot(vecT(vecSubset),vecRate(vecSubset));
 		else
-			stairs(vecT,vecRate);
+			plot(vecT,vecRate);
 		end
 		xlabel('Time after event (s)');
 		ylabel(strLabelY);
@@ -197,6 +199,7 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 		sMSD.vecScale = vecScale;
 		sMSD.matMSD = matMSD;
 		sMSD.vecV = vecV;
+        sMSD.vecHandles = vecHandles;
 	end
 end
 function vecMSD = calcSingleMSD(dblScale,vecT,vecV)

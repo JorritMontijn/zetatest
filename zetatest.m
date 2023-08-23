@@ -109,7 +109,9 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
     %3.5.2 - 21 August 2023
     %   Made some minor changes to produce deterministic output identical to the python version 
     %   Fixed a bug in getPseudoSpikeVectors that could discard some spikes in the final trial [by JM]
-	
+	%3.6 - 23 August 2023
+    %   Fixed plotting of onsets which apparently broke some time in the past... [by JM]
+    
 	%% prep data
 	%ensure orientation
 	vecSpikeTimes = vecSpikeTimes(:);
@@ -231,7 +233,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 		vecD = diff(vecRespBinsDur)';
 		vecMu_Dur = vecR(1:2:end)./vecD(1:2:end);
 		dblStart1 = min(vecRespBinsDur);
-		dblFirstPreDur = dblStart1 - max([0 dblStart1 - median(vecD(2:2:end))]);
+		dblFirstPreDur = dblStart1 - max([0 dblStart1 - median(vecD(2:2:end))]) + eps;
 		dblR1 = sum(vecSpikeTimes > (dblStart1 - dblFirstPreDur) & vecSpikeTimes < dblStart1);
 		vecMu_Pre = [dblR1 vecR(2:2:end)]./[dblFirstPreDur vecD(2:2:end)];
 		
@@ -265,7 +267,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 		catch
 		end
 		if intPlot > 2
-			subplot(2,3,1)
+			hRaster = subplot(2,3,1);
 			plotRaster(vecSpikeTimes,vecEventStarts(:,1),dblUseMaxDur,10000);
 			xlabel('Time after event (s)');
 			ylabel('Trial #');
@@ -301,7 +303,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 		ylabel('Fractional position of spike in trial');
 		fixfig
 		
-		subplot(2,3,4)
+		hDeviation = subplot(2,3,4);
 		cla;
 		hold all
 		for intIter=1:intPlotIters
@@ -347,20 +349,19 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 				[dblOnset,dblOnsetVal] = getOnset(vecRate,sRate.vecT,dblPeakTime,vecRestrictRange);
 				sRate.dblOnset = dblOnset;
 				vecLatencies = [dblMaxDTime dblMaxDTimeInvSign dblPeakTime dblOnset];
-				vecLatencyVals = [vecRate(intZETALoc) vecRate(intPeakLocInvSign) vecRate(intPeakLoc) dblOnsetVal];
+				vecLatencyVals = [vecRate(intZETALoc-1) vecRate(intPeakLocInvSign-1) vecRate(intPeakLoc) dblOnsetVal];
 			else
 				sRate.dblOnset = [nan];
 				vecLatencies = [dblMaxDTime dblMaxDTimeInvSign dblPeakTime];
-				vecLatencyVals = [vecRate(intZETALoc) vecRate(intPeakLocInvSign) vecRate(intPeakLoc)];
+				vecLatencyVals = [vecRate(intZETALoc-1) vecRate(intPeakLocInvSign-1) vecRate(intPeakLoc)];
 			end
 			intLatencyPeaks = min([intLatencyPeaks numel(vecLatencies)]);
-			vecLatencies = vecLatencies(1:intLatencyPeaks);
-			vecLatencyVals = vecLatencyVals(1:intLatencyPeaks);
 			if intPlot > 0
-				hold on
+                axes(sRate.vecHandles(end));
+                hold on;
 				scatter(dblPeakTime,vecRate(intPeakLoc),'gx');
-				scatter(dblMaxDTime,vecRate(intZETALoc),'bx');
-				scatter(dblMaxDTimeInvSign,vecRate(intPeakLocInvSign),'b*');
+				scatter(dblMaxDTime,vecLatencyVals(1),'bx');
+				scatter(dblMaxDTimeInvSign,vecLatencyVals(2),'b*');
 				if intLatencyPeaks > 3
 					scatter(dblOnset,dblOnsetVal,'rx');
 					title(sprintf('ZETA=%.0fms,-ZETA=%.0fms,Pk=%.0fms,On=%.2fms',dblMaxDTime*1000,dblMaxDTimeInvSign*1000,dblPeakTime*1000,dblOnset*1000));
@@ -371,10 +372,8 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 				fixfig;
 				
 				if intPlot > 3
-					vecHandles = get(gcf,'children');
-					ptrFirstSubplot = vecHandles(find(contains(get(vecHandles,'type'),'axes'),1,'last'));
-					axes(ptrFirstSubplot);
-					vecY = get(gca,'ylim');
+					axes(hRaster);
+                    vecY = get(gca,'ylim');
 					hold on;
 					if intLatencyPeaks > 3,plot(dblOnset*[1 1],vecY,'r--');end
 					plot(dblPeakTime*[1 1],vecY,'g--');
@@ -382,7 +381,9 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 					plot(dblMaxDTimeInvSign*[1 1],vecY,'b-.');
 					hold off
 				end
-			end
+            end
+            vecLatencies = vecLatencies(1:intLatencyPeaks);
+			vecLatencyVals = vecLatencyVals(1:intLatencyPeaks);
 		else
 			%placeholder peak data
 			sRate.dblOnset = [nan];
