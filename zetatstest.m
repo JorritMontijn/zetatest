@@ -14,11 +14,11 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 	%	- dblJitterSize: scalar, sets the temporal jitter window relative to dblUseMaxDur (default: 2)
 	%
 	%	output:
-	%	- dblZetaP; Zenith of Event-based Time-locked Anomalies: responsiveness z-score (i.e., >2 is significant)
+	%	- dblZetaP; Zenith of Event-based Time-locked Anomalies: responsiveness p-value
 	%	- sZETA; structure with fields:
-	%		- dblZETA; FDR-corrected responsiveness z-score (i.e., >2 is significant)
+	%		- dblZetaP; p-value corresponding to ZETA
+	%		- dblZETA; ZETA responsiveness statistic
 	%		- dblD; temporal deviation value underlying ZETA
-	%		- dblP; p-value corresponding to ZETA
 	%		- dblPeakT; time corresponding to ZETA
 	%		- intPeakIdx; entry corresponding to ZETA
 	%		- dblMeanD; Cohen's D based on mean-rate stim/base difference
@@ -32,6 +32,9 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 	%	Created by Jorrit Montijn
 	%1.0 - 2022 January 31
 	%	Removed non-interpolating procedures [by JM]
+	%1.1 - 2023 August 24
+	%	Small changes, including changing output name of dblP to dblZetaP to conform to zetatest and
+	%	clarify what it is the p-value of [by JM] 
 	
 	%% prep data
 	%ensure orientation
@@ -234,8 +237,8 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 	if nargin > 1
 		sZETA = struct;
 		sZETA.dblZETA = dblZETA;
+		sZETA.dblZetaP = dblZetaP;
 		sZETA.dblD = dblD;
-		sZETA.dblP = dblZetaP;
 		sZETA.dblPeakT = dblMaxDTime;
 		sZETA.intPeakIdx = intZETALoc;
 		if boolStopSupplied

@@ -83,8 +83,8 @@ function [vecPseudoTime,vecPseudoData,vecPseudoStartT] = getPseudoTimeSeries(vec
 	end
 	
 	%% add end
-	intLastUsedSample = find(vecTimestamps>(vecEventT(end)+dblWindowDur),1);
-	if isempty(intLastUsedSample)
+	intCheckTail = find(vecTimestamps>(vecEventT(end)+dblWindowDur),1);
+	if isempty(intCheckTail)
 		error([mfilename ':InsufficientSamples'],'dblMaxDur is too large: the tail of the final event would extend beyond the end of the time-series data. Please include more data, shorten dblMaxDur or remove the last event.');
 	else
 		dblTn = vecTimestamps(intLastUsedSample);
