@@ -25,7 +25,8 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 	%		- dblMeanP; p-value based on mean-rate stim/base difference
 	%		- vecTraceT: timestamps of trace entries (corresponding to vecZ)
 	%		- vecD; temporal deviation vector of data
-	%		- matRandD; baseline temporal deviation matrix of jittered data
+	%		- cellRandT; baseline temporal deviation matrix of jittered data
+	%		- cellRandDiff; deviation vectors for jittered data
 	%
 	%Version history:
 	%0.9 - 2021 October 29
@@ -35,6 +36,8 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 	%1.1 - 2023 August 24
 	%	Small changes, including changing output name of dblP to dblZetaP to conform to zetatest and
 	%	clarify what it is the p-value of [by JM] 
+	%1.2 - 2023 August 25
+	%	Changed default jitter window to -2 to +2, same as zetatest [by JM] 
 	
 	%% prep data
 	%ensure orientation
@@ -88,7 +91,19 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 	%% build onset/offset vectors
 	vecEventStarts = matEventTimes(:,1);
 	
-	%% get timeseries zeta
+	%% check data length
+	dblDataT0 = min(vecTime);
+	dblReqT0 = min(vecEventStarts) - dblJitterSize*dblUseMaxDur;
+	if dblDataT0 > dblReqT0
+		warning([mfilename ':InsufficientDataLength'],"leading data preceding first event is insufficient for maximal jittering")
+	end
+	dblDataT_end = max(vecTime);
+	dblReqT_end = max(vecEventStarts) + dblJitterSize*dblUseMaxDur + dblUseMaxDur;
+	if dblDataT_end < dblReqT_end
+		warning([mfilename ':InsufficientDataLength'],"lagging data after last event is insufficient for maximal jittering")
+	end
+	
+    %% get timeseries zeta
 	[vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
 		calcTsZetaOne(vecTime,vecValue,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize);
 	

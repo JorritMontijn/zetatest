@@ -111,11 +111,13 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
     %   Fixed a bug in getPseudoSpikeVectors that could discard some spikes in the final trial [by JM]
 	%3.6 - 23 August 2023
     %   Fixed plotting of onsets which apparently broke some time in the past... [by JM]
+    %3.6.1 - 25 August 2023
+    %   Added time-sorting step to vecSpikeTimes in case spikes are supplied in random order [by JM]
     
 	%% prep data
 	%ensure orientation
-	vecSpikeTimes = vecSpikeTimes(:);
 	assert(isnumeric(vecSpikeTimes),[mfilename ':WrongInputType'], 'Supplied spike time variable is not a numeric vector');
+	vecSpikeTimes = sort(vecSpikeTimes(:));
 	
 	%calculate stim/base difference?
 	boolStopSupplied = false;

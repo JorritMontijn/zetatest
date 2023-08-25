@@ -63,8 +63,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
     vecMaxRandD = nan(1,intResampNum);
     vecStartOnly = vecPseudoEventT(:);
     intTrials = numel(vecStartOnly);
-    %vecJitterPerTrial = dblJitterSize*dblUseMaxDur*((rand(size(vecStartOnly))-0.5)*2); %original zeta
-    vecJitterPerTrial = dblJitterSize*linspace(-dblUseMaxDur,dblUseMaxDur,intTrials)'; %new
+    vecJitterPerTrial = dblJitterSize*linspace(-dblUseMaxDur,dblUseMaxDur,intTrials)';
     matJitterPerTrial = nan(intTrials,intResampNum);
     for intResampling=1:intResampNum
         vecRandPerm = randperm(numel(vecJitterPerTrial),numel(vecJitterPerTrial));
@@ -84,7 +83,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
         rng(1,'mt19937ar');
     end
 
-    %% run bootstraps; try parallel, otherwise run normal loop
+    %% run bootstraps
     if boolUseParallel
         parfor intResampling=1:intResampNum
             %% get random subsample
