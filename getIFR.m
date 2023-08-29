@@ -22,7 +22,7 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	%		- vecDiff;
 	%		- vecScale; 
 	%
-	%v1.5 - 26 May 2023
+	%v1.7 - 22 August 2023
 	
 	%Version history:
 	%1.0 - 24 January 2019

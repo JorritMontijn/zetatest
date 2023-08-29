@@ -158,13 +158,25 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 		%plot maximally 100 traces
 		intPlotIters = min([numel(cellRandDiff) 100]);
 		
-		%make maximized figure
-		figure
+		%maximize figure
+		figure;
 		drawnow;
-		jFig = get(handle(gcf), 'JavaFrame');
-		jFig.setMaximized(true);
-		figure(gcf);
-		drawnow;
+		try
+			try
+				%try new method
+				h = handle(gcf);
+				h.WindowState = 'maximized';
+			catch
+				%try old method with javaframe (deprecated as of R2021)
+				sWarn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
+				drawnow;
+				jFig = get(handle(gcf), 'JavaFrame');
+				jFig.setMaximized(true);
+				drawnow;
+				warning(sWarn);
+			end
+		catch
+		end
 		
 		if intPlot > 1
 			[vecRefT2,matTracePerTrial] = getTraceInTrial(vecTime,vecData,vecEventStarts,dblSamplingInterval,dblUseMaxDur);
