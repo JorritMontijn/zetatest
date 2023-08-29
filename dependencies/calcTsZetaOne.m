@@ -108,6 +108,13 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 	end
 	
 	%% calculate significance
-	[dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
+    vecMaxRandD = vecMaxRandD(~isnan(vecMaxRandD));
+    if numel(vecMaxRandD) < 3
+        warning([mfilename ':DataTooSparse'],"Data is too sparse for jittering control; defaulting to p=1.0");
+        dblZetaP = 1.0;
+        dblZETA = 0;
+    else
+	    [dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
+    end
 end
 

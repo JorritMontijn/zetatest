@@ -1,9 +1,9 @@
-function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize)
+function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize)
 	%zetatstest Calculates responsiveness index zeta for timeseries data
-	%syntax: [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,vecEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize)
+	%syntax: [dblZetaP,sZETA] = zetatstest(vecTime,vecData,vecEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize)
 	%	input:
 	%	- vecTime [N x 1]: time (s) corresponding to entries in vecValue
-	%	- vecValue [N x 1]: data values (e.g., calcium imaging dF/F0)
+	%	- vecData [N x 1]: data values (e.g., calcium imaging dF/F0)
 	%	- vecEventTimes [T x 1]: event on times (s), or [T x 2] including event off times
 	%	- dblUseMaxDur: scalar (s), ignore all values beyond this duration after stimulus onset
 	%								[default: median of trial start to trial start]
@@ -43,8 +43,8 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 	%ensure orientation
 	vecTime = vecTime(:);
 	[vecTime,vecReorder] = sort(vecTime);
-	vecValue = vecValue(:);
-	vecValue = vecValue(vecReorder);
+	vecData = vecData(:);
+	vecData = vecData(vecReorder);
 	
 	%calculate stim/base difference?
 	boolStopSupplied = false;
@@ -105,7 +105,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 	
     %% get timeseries zeta
 	[vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-		calcTsZetaOne(vecTime,vecValue,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize);
+		calcTsZetaOne(vecTime,vecData,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize);
 	
 	%get location
 	dblMaxDTime = vecRefT(intZETALoc);
@@ -137,8 +137,8 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 			vecSelectFramesStim = intStartT:intStopT;
 			
 			%% get data
-			vecUseBaseTrace = vecValue(vecSelectFramesBase);
-			vecUseStimTrace = vecValue(vecSelectFramesStim);
+			vecUseBaseTrace = vecData(vecSelectFramesBase);
+			vecUseStimTrace = vecData(vecSelectFramesStim);
 			
 			%% get activity
 			vecBaseAct(intEvent) = mean(vecUseBaseTrace);
@@ -167,7 +167,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 		drawnow;
 		
 		if intPlot > 1
-			[vecRefT2,matTracePerTrial] = getTraceInTrial(vecTime,vecValue,vecEventStarts,dblSamplingInterval,dblUseMaxDur);
+			[vecRefT2,matTracePerTrial] = getTraceInTrial(vecTime,vecData,vecEventStarts,dblSamplingInterval,dblUseMaxDur);
 			subplot(2,3,1)
 			imagesc(vecRefT2,1:size(matTracePerTrial,1),matTracePerTrial);
 			colormap(hot);
@@ -183,7 +183,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 		sOpt = struct;
 		sOpt.handleFig =-1;
 		sOpt.vecWindow = [0 dblUseMaxDur];
-		[vecMean,vecSEM,vecWindowBinCenters] = doPEP(vecTime,vecValue,vecEventStarts(:,1),sOpt);
+		[vecMean,vecSEM,vecWindowBinCenters] = doPEP(vecTime,vecData,vecEventStarts(:,1),sOpt);
 		errorbar(vecWindowBinCenters,vecMean,vecSEM);
 		%ylim([0 max(get(gca,'ylim'))]);
 		title(sprintf('Mean value over trials'));
@@ -225,7 +225,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecValue,matEventTimes,dblUseMaxD
 			vecRef2T = uniquetol(vecRefT,dblTol);
 			
 			%build interpolated data
-			[vecRef3T,matTracePerTrialSR] = getInterpolatedTimeSeries(vecTime,vecValue,vecEventStarts(:,1),dblUseMaxDur,vecRef2T);
+			[vecRef3T,matTracePerTrialSR] = getInterpolatedTimeSeries(vecTime,vecData,vecEventStarts(:,1),dblUseMaxDur,vecRef2T);
 			indRemPoints = vecRef3T<0 | vecRef3T>dblUseMaxDur;
 			vecRef3T(indRemPoints) = [];
 			matTracePerTrialSR(:,indRemPoints)=[];

@@ -343,6 +343,8 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 		sRate.intPeakLoc = intPeakLoc;
 		sRate.vecPeakStartStopIdx = vecPeakStartStopIdx;
 		
+        intZetaIdxRate = min(max(0,intZETALoc-1),numel(vecRate)-1);
+        intZetaIdxInvRate = min(max(0,intPeakLocInvSign-1),numel(vecRate)-1);
 		
 		if ~isnan(dblPeakTime)
 			%assign array data
@@ -351,11 +353,11 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 				[dblOnset,dblOnsetVal] = getOnset(vecRate,sRate.vecT,dblPeakTime,vecRestrictRange);
 				sRate.dblOnset = dblOnset;
 				vecLatencies = [dblMaxDTime dblMaxDTimeInvSign dblPeakTime dblOnset];
-				vecLatencyVals = [vecRate(intZETALoc-1) vecRate(intPeakLocInvSign-1) vecRate(intPeakLoc) dblOnsetVal];
+				vecLatencyVals = [vecRate(intZetaIdxRate) vecRate(intZetaIdxInvRate) vecRate(intPeakLoc) dblOnsetVal];
 			else
 				sRate.dblOnset = [nan];
 				vecLatencies = [dblMaxDTime dblMaxDTimeInvSign dblPeakTime];
-				vecLatencyVals = [vecRate(intZETALoc-1) vecRate(intPeakLocInvSign-1) vecRate(intPeakLoc)];
+				vecLatencyVals = [vecRate(intZetaIdxRate) vecRate(intZetaIdxInvRate) vecRate(intPeakLoc)];
 			end
 			intLatencyPeaks = min([intLatencyPeaks numel(vecLatencies)]);
 			if intPlot > 0

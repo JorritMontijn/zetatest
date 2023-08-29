@@ -6,7 +6,7 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 	%	- vecV [N x 1]: values (e.g., z-scores)
 	%
 	%Optional inputs:
-	%	- dblSmoothSd: Gaussian SD of smoothing kernel (in # of samples) [default: 0]
+	%	- dblSmoothSd: Gaussian SD of smoothing kernel (in # of samples) [default: 2]
 	%	- dblMinScale: minimum derivative scale in seconds [default: 1/1000]
 	%	- dblBase: base for exponential scale step size [default: 1.5]
 	%	- intPlot: integer, plotting switch (0=none, 1=plot rates, 2=subplot 5&6 of [2 3]) [default: 0].
@@ -50,7 +50,7 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 
 	%% set default values
 	if ~exist('dblSmoothSd','var') || isempty(dblSmoothSd)
-		dblSmoothSd = 0;
+		dblSmoothSd = 2;
 	end
 	if ~exist('dblBase','var') || isempty(dblBase)
 		dblBase = 1.5;
