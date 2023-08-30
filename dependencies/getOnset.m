@@ -19,6 +19,8 @@ function [dblOnset,dblValue,dblBaseVal,dblPeakT,dblPeakVal] = getOnset(vecData,v
 	%	Created by Jorrit Montijn
 	%2.0 - August 22 2023
     %   Now actually uses dblPeakT [by JM]
+    %2.0.1 - August 20 2023
+    %   Bug fix for peak time definition [by JM]
 
 	%%
 	%check inputs
@@ -37,9 +39,14 @@ function [dblOnset,dblValue,dblBaseVal,dblPeakT,dblPeakVal] = getOnset(vecData,v
 	%find peak if none supplied
     if ~exist('dblPeakT','var') || isempty(dblPeakT) 
         [dblPeakVal,intPeakT] = max(vecDataCropped);
-	    dblPeakT = vecT(intPeakIdx);
+	    dblPeakT = vecCropT(intPeakT);
     else
         intPeakT = find(vecCropT > dblPeakT,1,'first');
+        if isempty(intPeakT)
+            warning([mfilename ':InvalidPeakTime'],'Supplied peak was invalid; taking max value of cropped data');
+            [dblPeakVal,intPeakT] = max(vecDataCropped);
+	        dblPeakT = vecCropT(intPeakT);
+        end
     end
     dblPeakVal = vecDataCropped(intPeakT);
 	
