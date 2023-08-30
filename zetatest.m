@@ -343,8 +343,8 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 		sRate.intPeakLoc = intPeakLoc;
 		sRate.vecPeakStartStopIdx = vecPeakStartStopIdx;
 		
-        intZetaIdxRate = min(max(0,intZETALoc-1),numel(vecRate));
-        intZetaIdxInvRate = min(max(0,intPeakLocInvSign-1),numel(vecRate));
+        intZetaIdxRate = min(max(1,intZETALoc-1),numel(vecRate));
+        intZetaIdxInvRate = min(max(1,intPeakLocInvSign-1),numel(vecRate));
 		
 		if ~isnan(dblPeakTime)
 			%assign array data
