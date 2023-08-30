@@ -41,7 +41,7 @@ function [dblOnset,dblValue,dblBaseVal,dblPeakT,dblPeakVal] = getOnset(vecData,v
         [dblPeakVal,intPeakT] = max(vecDataCropped);
 	    dblPeakT = vecCropT(intPeakT);
     else
-        intPeakT = find(vecCropT > dblPeakT,1,'first');
+        intPeakT = find(vecCropT >= dblPeakT,1,'first');
         if isempty(intPeakT)
             warning([mfilename ':InvalidPeakTime'],'Supplied peak was invalid; taking max value of cropped data');
             [dblPeakVal,intPeakT] = max(vecDataCropped);
