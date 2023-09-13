@@ -1,7 +1,7 @@
-function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,boolUseParallel)
+function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,boolUseParallel,intJitterDistro)
     %calcZetaOne Calculates neuronal responsiveness index zeta
     %[vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-    %	calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,boolUseParallel)
+    %	calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,boolUseParallel,intJitterDistro)
 
     %% check inputs and pre-allocate error output
     vecSpikeT = [];
@@ -25,6 +25,15 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
             boolUseParallel = false;
         else
             boolUseParallel = true;
+        end
+    end
+    if ~exist('intJitterDistro','var') || isempty(intJitterDistro)
+        intJitterDistro = 1;
+    end
+    if intJitterDistro == 1
+        intTrialN = max(size(vecEventStarts));
+        if intResampNum > factorial(intTrialN)
+            warning([mfilename ':JitterDistro'],'Requested # of resamplings is larger than factorial(intTrialNum); duplicates will exist');
         end
     end
 
@@ -63,13 +72,23 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
     vecMaxRandD = nan(1,intResampNum);
     vecStartOnly = vecPseudoEventT(:);
     intTrials = numel(vecStartOnly);
-    vecJitterPerTrial = dblJitterSize*linspace(-dblUseMaxDur,dblUseMaxDur,intTrials)';
     matJitterPerTrial = nan(intTrials,intResampNum);
-    for intResampling=1:intResampNum
-        vecRandPerm = randperm(numel(vecJitterPerTrial),numel(vecJitterPerTrial));
-        matJitterPerTrial(:,intResampling) = vecJitterPerTrial(vecRandPerm);
+    if intJitterDistro == 1
+        %random resampling of linear spacing between dblJitterSize*[-tau, +tau]
+        vecJitterPerTrial = dblJitterSize*linspace(-dblUseMaxDur,dblUseMaxDur,intTrials)';
+        for intResampling=1:intResampNum
+            vecRandPerm = randperm(numel(vecJitterPerTrial),numel(vecJitterPerTrial));
+            matJitterPerTrial(:,intResampling) = vecJitterPerTrial(vecRandPerm);
+        end
+    elseif intJitterDistro == 2
+        %uniform jitters between dblJitterSize*[-tau, +tau]
+        for intResampling=1:intResampNum
+            matJitterPerTrial(:,intResampling) = dblJitterSize*dblUseMaxDur*((rand(size(vecStartOnly))-0.5)*2);
+        end
+    else
+        error([mfilename ':JitterDistroSwitch'],sprintf('Unknown switch for intJitterDistro: %d',intJitterDistro));
     end
-    
+
     %% this part is only to check if matlab and python give the same exact results
     % unfortunately matlab's randperm() and numpy's np.random.permutation give different outputs even with
     % identical seeds and identical random number generators, so I've had to load in a table of random values here...
