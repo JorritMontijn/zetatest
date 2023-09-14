@@ -1,6 +1,6 @@
 function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTimes,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize,boolStitch,intJitterDistro)
 	%zetatest Calculates neuronal responsiveness index zeta
-	%syntax: [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize,boolStitch,intJitterDistro)
+	%syntax: [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,vecEventTimes,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize,boolStitch,intJitterDistro)
 	%	input:
 	%	- vecSpikeTimes [S x 1]: spike times (in seconds)
 	%	- vecEventTimes [T x 1]: event on times (s), or [T x 2] including event off times to calculate mean-rate difference
@@ -172,6 +172,8 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	if ~exist('dblJitterSize','var') || isempty(dblJitterSize)
 		dblJitterSize = 2;
 	end
+	assert(dblJitterSize>0,[mfilename ':WrongJitterInput'], sprintf('dblJitterSize must be a positive scalar, you requested %.3f',dblJitterSize));
+	
 	%get boolStitch
 	if ~exist('boolStitch','var') || isempty(boolStitch)
 		boolStitch = true;
