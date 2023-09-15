@@ -348,7 +348,11 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 		dblMeanRate = (numel(vecSpikeT)/(dblUseMaxDur*numel(vecEventStarts)));
 		[vecRate,sRate] = getMultiScaleDeriv(vecSpikeT,vecRealDiff,[],[],[],intPlot,dblMeanRate,dblUseMaxDur);
 	end
-	
+    if intPlot > 0
+        axes(sRate.vecHandles(end));
+        xlim([0 dblUseMaxDur]);
+    end
+
 	%% calculate IFR statistics
 	if ~isempty(sRate) && intLatencyPeaks > 0
 		%get IFR peak
@@ -390,6 +394,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 					title(sprintf('ZETA=%.0fms,-ZETA=%.0fms,Pk=%.0fms',dblMaxDTime*1000,dblMaxDTimeInvSign*1000,dblPeakTime*1000));
 				end
 				hold off
+                xlim([0 dblUseMaxDur]);
 				fixfig;
 				
 				if intPlot > 3
