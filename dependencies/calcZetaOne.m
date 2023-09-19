@@ -73,20 +73,10 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
     vecStartOnly = vecPseudoEventT(:);
     intTrials = numel(vecStartOnly);
     matJitterPerTrial = nan(intTrials,intResampNum);
-    if intJitterDistro == 1
-        %random resampling of linear spacing between dblJitterSize*[-tau, +tau]
-        vecJitterPerTrial = dblJitterSize*linspace(-dblUseMaxDur,dblUseMaxDur,intTrials)';
-        for intResampling=1:intResampNum
-            vecRandPerm = randperm(numel(vecJitterPerTrial),numel(vecJitterPerTrial));
-            matJitterPerTrial(:,intResampling) = vecJitterPerTrial(vecRandPerm);
-        end
-    elseif intJitterDistro == 2
-        %uniform jitters between dblJitterSize*[-tau, +tau]
-        for intResampling=1:intResampNum
-            matJitterPerTrial(:,intResampling) = dblJitterSize*dblUseMaxDur*((rand(size(vecStartOnly))-0.5)*2);
-        end
-    else
-        error([mfilename ':JitterDistroSwitch'],sprintf('Unknown switch for intJitterDistro: %d',intJitterDistro));
+    
+    %uniform jitters between dblJitterSize*[-tau, +tau]
+    for intResampling=1:intResampNum
+        matJitterPerTrial(:,intResampling) = dblJitterSize*dblUseMaxDur*((rand(size(vecStartOnly))-0.5)*2);
     end
 
     %% this part is only to check if matlab and python give the same exact results
