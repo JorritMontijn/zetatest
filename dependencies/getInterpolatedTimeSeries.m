@@ -38,8 +38,8 @@ function matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecE
         if boolUseNew
             vecInterpTrace = matlab.internal.math.interp1(vecUseTimes,vecUseTrace,'linear','linear',vecUseInterpT);
         else
-            F = griddedInterpolant(X,V,'linear');
-            vecInterpTrace = F(Xqcol);
+            F = griddedInterpolant(vecUseTimes,vecUseTrace,'linear');
+            vecInterpTrace = F(vecUseInterpT);
         end
 		matTracePerTrial(intTrial,:) = vecInterpTrace;
 	end
