@@ -1,6 +1,6 @@
-function matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecEventStartT,vecRefT,cellSampleAssignments)
+function [vecRefT,matTracePerTrial] = getInterpolatedTimeSeries(vecTimestamps,vecData,vecEventStartT,dblUseMaxDur,vecRefT)
 	%getTraceInTrial Builds common timeframe
-	%syntax: matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecEventStartT,vecRefT,cellSampleAssignments)
+	%syntax: [vecRefT,matTracePerTrial] = getInterpolatedTimeSeries(vecTimestamps,vecData,vecEventStartT,dblUseMaxDur,vecRefT)
 	%	input:
 	%	- vecSpikes; spike times (s)
 	%	- vecTrialStarts: trial start times (s)
@@ -14,7 +14,9 @@ function matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecE
 	for intTrial=1:numel(vecEventStartT)
 		%% get original times
 		dblStartT = vecEventStartT(intTrial);
-		vecSelectSamples = cellSampleAssignments{intTrial};
+		intStartT = max([1 find(vecTimestamps > (dblStartT + vecRefT(1)),1) - 1]);
+		intStopT = min([numel(vecTimestamps) find(vecTimestamps > (dblStartT + vecRefT(end)),1) + 1]);
+		vecSelectSamples = intStartT:intStopT;
 		
 		%% get data
 		vecUseTimes = vecTimestamps(vecSelectSamples);
@@ -24,10 +26,6 @@ function matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecE
 		vecUseInterpT = vecRefT+dblStartT;
 		
 		%get real fractions for training set
-        %vecInterpTrace = interp1(vecUseTimes,vecUseTrace,vecUseInterpT);
-        %bypass time-consuming checks and use direct method
-        vecInterpTrace = matlab.internal.math.interp1(vecUseTimes,vecUseTrace,'linear','linear',vecUseInterpT);
-       
-		matTracePerTrial(intTrial,:) = vecInterpTrace;
+		matTracePerTrial(intTrial,:) = interp1(vecUseTimes,vecUseTrace,vecUseInterpT);
 	end
 end

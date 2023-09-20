@@ -7,11 +7,11 @@
 	%This is a subfunction for getZeta().
 	
 	%% prepare
-	[vecRefT,cellSampleAssignments] = getTsRefT(vecTimestamps,vecEventStartT,dblUseMaxDur);
-
+	vecRefT = getTsRefT(vecTimestamps,vecEventStartT,dblUseMaxDur);
+	
 	%get data
 	%build interpolated data
-	matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecEventStartT,vecRefT,cellSampleAssignments);
+	[vecRefT,matTracePerTrial] = getInterpolatedTimeSeries(vecTimestamps,vecData,vecEventStartT,dblUseMaxDur,vecRefT);
 	indRemPoints = vecRefT<0 | vecRefT>dblUseMaxDur;
 	vecRefT(indRemPoints) = [];
 	matTracePerTrial(:,indRemPoints)=[];

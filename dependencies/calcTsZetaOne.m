@@ -58,27 +58,18 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 	cellRandT = cell(1,intResampNum);
 	cellRandDiff = cell(1,intResampNum);
 	vecMaxRandD = nan(1,intResampNum);
-    vecStartOnly = vecPseudoStartT(:);
-    intJitterDistro=1;
-    if intJitterDistro == 1
-    	vecJitterPerTrial = dblJitterSize*linspace(-dblUseMaxDur,dblUseMaxDur,intTrials)';
-    	matJitterPerTrial = nan(intTrials,intResampNum);
-    	for intResampling=1:intResampNum
-    		matJitterPerTrial(:,intResampling) = vecJitterPerTrial(randperm(numel(vecJitterPerTrial)));
-    	end
-    else
-    	%uniform jitters between dblJitterSize*[-tau, +tau]
-        matJitterPerTrial = nan(intTrials,intResampNum);
-        for intResampling=1:intResampNum
-            matJitterPerTrial(:,intResampling) = dblJitterSize*dblUseMaxDur*((rand(size(vecStartOnly))-0.5)*2);
-        end
-    end
-
-    %% this part is only to check if matlab and python give the same exact results
-    % unfortunately matlab's randperm() and numpy's np.random.permutation give different outputs even with
-    % identical seeds and identical random number generators, so I've had to load in a table of random values here...
-    boolTest = false;
-    if boolTest
+	vecStartOnly = vecPseudoStartT(:);
+	vecJitterPerTrial = dblJitterSize*linspace(-dblUseMaxDur,dblUseMaxDur,intTrials)';
+	matJitterPerTrial = nan(intTrials,intResampNum);
+	for intResampling=1:intResampNum
+		matJitterPerTrial(:,intResampling) = vecJitterPerTrial(randperm(numel(vecJitterPerTrial)));
+	end
+	
+	%% this part is only to check if matlab and python give the same exact results
+	% unfortunately matlab's randperm() and numpy's np.random.permutation give different outputs even with
+	% identical seeds and identical random number generators, so I've had to load in a table of random values here...
+	boolTest = false;
+	if boolTest
 		fprintf('Loading deterministic jitter data for comparison with python\n')
 		warning([mfilename ':DebugMode'],'set boolTest to false in calcTsZetaOne.m to suppress this warning')
 		load('C:\Code\Python\zetapy\unit_tests\matJitterPerTrialTsZeta.mat');

@@ -1,6 +1,6 @@
-function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTimes,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize,boolStitch)
+function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTimes,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize,boolStitch,intJitterDistro)
 	%zetatest Calculates neuronal responsiveness index zeta
-	%syntax: [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,vecEventTimes,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize,boolStitch)
+	%syntax: [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,vecEventTimes,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize,boolStitch,intJitterDistro)
 	%	input:
 	%	- vecSpikeTimes [S x 1]: spike times (in seconds)
 	%	- vecEventTimes [T x 1]: event on times (s), or [T x 2] including event off times to calculate mean-rate difference
@@ -15,6 +15,8 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%							Gumbel approximation (default: false) [Note: requires many resamplings!]
 	%	- dblJitterSize; scalar, sets the temporal jitter window relative to dblUseMaxDur (default: 2)
 	%	- boolStitch; boolean, use data-stitching to ensure continuous time (default: true)
+    %   - intJitterDistro; integer switch, use linear spacing (1) or uniform (2) 
+    %                           (default: 1, unless intResampNum > factorial(intTrialN), in which case 2)
 	%
 	%	output:
 	%	- dblZetaP; p-value based on Zenith of Event-based Time-locked Anomalies
@@ -113,7 +115,9 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
     %   Fixed plotting of onsets which apparently broke some time in the past... [by JM]
     %3.6.1 - 25 August 2023
     %   Added time-sorting step to vecSpikeTimes in case spikes are supplied in random order [by JM]
-
+    %3.7 - 13 Sept 2023
+    %   Added switch for setting the jitter distribution [by JM]
+    
 	%% prep data
 	%ensure orientation
 	assert(isnumeric(vecSpikeTimes),[mfilename ':WrongInputType'], 'Supplied spike time variable is not a numeric vector');
@@ -174,13 +178,23 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	if ~exist('boolStitch','var') || isempty(boolStitch)
 		boolStitch = true;
 	end
-
+	%get intJitterDistro
+	if ~exist('intJitterDistro','var') || isempty(intJitterDistro)
+		intTrialN = max(size(matEventTimes));
+        if intResampNum > factorial(intTrialN)
+            intJitterDistro = 2;
+        else
+            intJitterDistro = 1;
+        end
+	end
+	assert(intJitterDistro == 1 | intJitterDistro == 2,[mfilename ':WrongInputType'], 'intJitterDistro can only be 1 or 2');
+	
 	%% get zeta
 	if numel(matEventTimes) > 1 && numel(vecSpikeTimes) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
 		vecEventStarts = matEventTimes(:,1);
         boolUseParallel = [];
 		[vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-			calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,boolUseParallel);
+			calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,boolUseParallel,intJitterDistro);
 	else
 		intZETALoc = nan;
 		vecEventStarts = [];
