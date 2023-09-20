@@ -11,15 +11,15 @@ function [vecRefT,cellSampleAssignments] = getTsRefT(vecTimestamps,vecEventStart
     %build common timeframe
     cellRefT = cell(1,intTrialNum);
     cellSampleAssignments = cell(1,intTrialNum);
-    %try
+    try
         [vecStart,vecStop] = findgtentries2_mex(vecTimestamps,vecEventStartT,vecEventStartT+dblUseMaxDur);
-    %catch
-    %    [vecStart,vecStop] = findgtentries2(vecTimestamps,vecEventStartT,vecEventStartT+dblUseMaxDur);
-    %end
+    catch
+        [vecStart,vecStop] = findgtentries2(vecTimestamps,vecEventStartT,vecEventStartT+dblUseMaxDur);
+    end
     for intTrial=1:intTrialNum
-        vecSelectSamples = (vecStart(intTrial)-1):(vecStop(intTrial)+0);
+        vecSelectSamples = vecStart(intTrial):vecStop(intTrial);
         cellSampleAssignments{intTrial} = vecSelectSamples;
-        cellRefT{intTrial} = vecTimestamps(vecSelectSamples(2:(end-1)))-vecEventStartT(intTrial);
+        cellRefT{intTrial} = vecTimestamps(vecSelectSamples)-vecEventStartT(intTrial);
     end
 
 %     %old and slow
@@ -75,6 +75,13 @@ function [vecCompIdx1,vecCompIdx2] = findgtentries2(vecIn,vecComp1,vecComp2)
             if ~boolComp2Done
                 dblCompVal2 = vecComp2(intCompIdx2);
             end
+        end
+    end
+end
+function intIdx = findfirstgreaterthan(vecIn,dblCompVal)
+    for intIdx=1:numel(vecIn)
+        if vecIn(intIdx) > dblCompVal
+            return;
         end
     end
 end
