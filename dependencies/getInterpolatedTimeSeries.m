@@ -24,10 +24,9 @@ function matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecE
 		vecUseInterpT = vecRefT+dblStartT;
 		
 		%get real fractions for training set
-        %vecInterpTrace = interp1(vecUseTimes,vecUseTrace,vecUseInterpT);
+        vecInterpTrace = interp1(vecUseTimes,vecUseTrace,vecUseInterpT);
         %bypass time-consuming checks and use direct method
-        vecInterpTrace = matlab.internal.math.interp1(vecUseTimes,vecUseTrace,'linear','linear',vecUseInterpT);
-       
+        %vecInterpTrace = matlab.internal.math.interp1(vecUseTimes,vecUseTrace,'linear','linear',vecUseInterpT);
 		matTracePerTrial(intTrial,:) = vecInterpTrace;
 	end
 end
