@@ -38,6 +38,9 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	%	clarify what it is the p-value of [by JM] 
 	%1.2 - 2023 August 25
 	%	Changed default jitter window to -2 to +2, same as zetatest [by JM] 
+	%1.3 - 2023 September 19
+	%	Vast improvement in computation time; 3x faster single-threaded, 10x faster multi-threaded 
+    %   (but note that YMMV) [by JM]  
 	
 	%% prep data
 	%ensure orientation
@@ -95,12 +98,12 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	dblDataT0 = min(vecTime);
 	dblReqT0 = min(vecEventStarts) - dblJitterSize*dblUseMaxDur;
 	if dblDataT0 > dblReqT0
-		warning([mfilename ':InsufficientDataLength'],"leading data preceding first event is insufficient for maximal jittering")
+		warning([mfilename ':InsufficientDataLength'],"leading data preceding first event is insufficient for maximal jittering. You can suppress this warning using warning('off','zetatstest:InsufficientDataLength')")
 	end
 	dblDataT_end = max(vecTime);
 	dblReqT_end = max(vecEventStarts) + dblJitterSize*dblUseMaxDur + dblUseMaxDur;
 	if dblDataT_end < dblReqT_end
-		warning([mfilename ':InsufficientDataLength'],"lagging data after last event is insufficient for maximal jittering")
+		warning([mfilename ':InsufficientDataLength'],"lagging data after last event is insufficient for maximal jittering. You can suppress this warning using warning('off','zetatstest:InsufficientDataLength')")
 	end
 	
     %% get timeseries zeta
@@ -232,19 +235,17 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 		
 		if intPlot > 1
 			%set tol
-			dblSampInterval = median(diff(vecTime));
-			dblTol = dblSampInterval/100;
-			vecRef2T = uniquetol(vecRefT,dblTol);
-			
+			[vecRef2T,cellSampleAssignments] = getTsRefT(vecTime,vecEventStarts(:,1),dblUseMaxDur);
+
 			%build interpolated data
-			[vecRef3T,matTracePerTrialSR] = getInterpolatedTimeSeries(vecTime,vecData,vecEventStarts(:,1),dblUseMaxDur,vecRef2T);
-			indRemPoints = vecRef3T<0 | vecRef3T>dblUseMaxDur;
-			vecRef3T(indRemPoints) = [];
+			matTracePerTrialSR = getInterpolatedTimeSeries(vecTime,vecData,vecEventStarts(:,1),vecRef2T,cellSampleAssignments);
+			indRemPoints = vecRef2T<0 | vecRef2T>dblUseMaxDur;
+			vecRef2T(indRemPoints) = [];
 			matTracePerTrialSR(:,indRemPoints)=[];
 			vecMeanTrace = nanmean(matTracePerTrialSR,1)';
 			
 			subplot(2,3,5)
-			imagesc(vecRef3T,1:size(matTracePerTrialSR,1),matTracePerTrialSR);
+			imagesc(vecRef2T,1:size(matTracePerTrialSR,1),matTracePerTrialSR);
 			colormap(hot);
 			xlabel('Time after event (s)');
 			ylabel('Trial #');
@@ -252,7 +253,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 			grid off;
 			
 			subplot(2,3,6)
-			plot(vecRef3T,vecMeanTrace);
+			plot(vecRef2T,vecMeanTrace);
 			xlabel('Time after event (s)');
 			ylabel('Data value');
 			fixfig;
