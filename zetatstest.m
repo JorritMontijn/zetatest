@@ -1,6 +1,6 @@
-function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize,intJitterDistro)
+function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize)
 	%zetatstest Calculates responsiveness index zeta for timeseries data
-	%syntax: [dblZetaP,sZETA] = zetatstest(vecTime,vecData,vecEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize,intJitterDistro)
+	%syntax: [dblZetaP,sZETA] = zetatstest(vecTime,vecData,vecEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize)
 	%	input:
 	%	- vecTime [N x 1]: time (s) corresponding to entries in vecValue
 	%	- vecData [N x 1]: data values (e.g., calcium imaging dF/F0)
@@ -38,8 +38,6 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	%	clarify what it is the p-value of [by JM] 
 	%1.2 - 2023 August 25
 	%	Changed default jitter window to -2 to +2, same as zetatest [by JM] 
-	%1.3 - 2023 September 20
-	%	Improvement in computation time, approximately 33% faster (but note that YMMV) [by JM]  
 	
 	%% prep data
 	%ensure orientation
@@ -86,10 +84,6 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	if ~exist('dblJitterSize','var') || isempty(dblJitterSize)
 		dblJitterSize = 2; %original:1
 	end
-	%get dblJitterSize
-	if ~exist('intJitterDistro','var') || isempty(intJitterDistro) || intJitterDistro<1 || intJitterDistro > 2
-		intJitterDistro = 1;
-	end
 	
 	%sampling interval
 	dblSamplingInterval = median(diff(vecTime));
@@ -101,17 +95,17 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	dblDataT0 = min(vecTime);
 	dblReqT0 = min(vecEventStarts) - dblJitterSize*dblUseMaxDur;
 	if dblDataT0 > dblReqT0
-		warning([mfilename ':InsufficientDataLength'],"leading data preceding first event is insufficient for maximal jittering. You can suppress this warning using warning('off','zetatstest:InsufficientDataLength')")
+		warning([mfilename ':InsufficientDataLength'],"leading data preceding first event is insufficient for maximal jittering")
 	end
 	dblDataT_end = max(vecTime);
 	dblReqT_end = max(vecEventStarts) + dblJitterSize*dblUseMaxDur + dblUseMaxDur;
 	if dblDataT_end < dblReqT_end
-		warning([mfilename ':InsufficientDataLength'],"leading data preceding first event is insufficient for maximal jittering. You can suppress this warning using warning('off','zetatstest:InsufficientDataLength')")
+		warning([mfilename ':InsufficientDataLength'],"lagging data after last event is insufficient for maximal jittering")
 	end
 	
     %% get timeseries zeta
 	[vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-		calcTsZetaOne(vecTime,vecData,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,intJitterDistro);
+		calcTsZetaOne(vecTime,vecData,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize);
 	
 	%get location
 	dblMaxDTime = vecRefT(intZETALoc);
@@ -243,14 +237,14 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 			vecRef2T = uniquetol(vecRefT,dblTol);
 			
 			%build interpolated data
-			matTracePerTrialSR = getInterpolatedTimeSeries(vecTime,vecData,vecEventStarts(:,1),vecRef2T);
-			indRemPoints = vecRef2T<0 | vecRef2T>dblUseMaxDur;
-			vecRef2T(indRemPoints) = [];
+			[vecRef3T,matTracePerTrialSR] = getInterpolatedTimeSeries(vecTime,vecData,vecEventStarts(:,1),dblUseMaxDur,vecRef2T);
+			indRemPoints = vecRef3T<0 | vecRef3T>dblUseMaxDur;
+			vecRef3T(indRemPoints) = [];
 			matTracePerTrialSR(:,indRemPoints)=[];
 			vecMeanTrace = nanmean(matTracePerTrialSR,1)';
 			
 			subplot(2,3,5)
-			imagesc(vecRef2T,1:size(matTracePerTrialSR,1),matTracePerTrialSR);
+			imagesc(vecRef3T,1:size(matTracePerTrialSR,1),matTracePerTrialSR);
 			colormap(hot);
 			xlabel('Time after event (s)');
 			ylabel('Trial #');
@@ -258,7 +252,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 			grid off;
 			
 			subplot(2,3,6)
-			plot(vecRef2T,vecMeanTrace);
+			plot(vecRef3T,vecMeanTrace);
 			xlabel('Time after event (s)');
 			ylabel('Data value');
 			fixfig;
