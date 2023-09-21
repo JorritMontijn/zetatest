@@ -15,8 +15,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%							Gumbel approximation (default: false) [Note: requires many resamplings!]
 	%	- dblJitterSize; scalar, sets the temporal jitter window relative to dblUseMaxDur (default: 2)
 	%	- boolStitch; boolean, use data-stitching to ensure continuous time (default: true)
-    %   - intJitterDistro; integer switch, use linear spacing (1) or uniform (2) 
-    %                           (default: 1, unless intResampNum > factorial(intTrialN), in which case 2)
+    %   - intJitterDistro; integer switch, use uniform (1) or  linear spacing (2) (default: 1)
 	%
 	%	output:
 	%	- dblZetaP; p-value based on Zenith of Event-based Time-locked Anomalies
