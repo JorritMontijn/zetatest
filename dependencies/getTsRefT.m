@@ -1,6 +1,6 @@
-function [vecRefT,cellSampleAssignments] = getTsRefT(vecTimestamps,vecEventStartT,dblUseMaxDur)
+function [vecRefT,cellSampleAssignments] = getTsRefT(vecTimestamps,vecEventStartT,dblUseMaxDur,boolUseMex)
     %getTsRefT Get reference time vector and sample assignments
-    %   [vecRefT,cellSampleAssignments] = getTsRefT(vecTimestamps,vecEventStartT,dblUseMaxDur)
+    %   [vecRefT,cellSampleAssignments] = getTsRefT(vecTimestamps,vecEventStartT,dblUseMaxDur,boolUseMex)
 
     %pre-allocate
     vecEventStartT = sort(vecEventStartT);
@@ -11,13 +11,14 @@ function [vecRefT,cellSampleAssignments] = getTsRefT(vecTimestamps,vecEventStart
     %build common timeframe
     cellRefT = cell(1,intTrialNum);
     cellSampleAssignments = cell(1,intTrialNum);
-    %try
-        [vecStart,vecStop] = findgtentries2_mex(vecTimestamps,vecEventStartT,vecEventStartT+dblUseMaxDur);
-    %catch
-    %    [vecStart,vecStop] = findgtentries2(vecTimestamps,vecEventStartT,vecEventStartT+dblUseMaxDur);
-    %end
+    if boolUseMex
+        [vecStart1,vecStop] = findgtentries2_mex(vecTimestamps,vecEventStartT,vecEventStartT+dblUseMaxDur);
+	else
+        [vecStart1,vecStop] = findgtentries2(vecTimestamps,vecEventStartT,vecEventStartT+dblUseMaxDur);
+    end
+	vecStart = max(1,vecStart1-1);
     for intTrial=1:intTrialNum
-        vecSelectSamples = (vecStart(intTrial)-1):(vecStop(intTrial)+0);
+		vecSelectSamples = vecStart(intTrial):vecStop(intTrial);
         cellSampleAssignments{intTrial} = vecSelectSamples;
         cellRefT{intTrial} = vecTimestamps(vecSelectSamples(2:(end-1)))-vecEventStartT(intTrial);
     end

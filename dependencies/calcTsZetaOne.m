@@ -24,7 +24,12 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 			boolUseParallel = true;
 		end
 	end
-	
+	try
+		[v1,v2]=findgtentries2_mex([1;2],[1;2],[1;2]);
+		boolUseMex = true;
+	catch
+		boolUseMex = false;
+	end
 	%% reduce data
 	if size(vecEventStarts,2)>2,error([mfilename ':IncorrectMatrixForm'],'Incorrect input form for vecEventStarts; size must be [m x 1] or [m x 2]');end
 	%discard leading/lagging data
@@ -48,7 +53,7 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 	
 	%% get trial responses
 	[vecRealDiff,vecRealFrac,vecRealFracLinear,vecRefT] = ...
-		getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecPseudoStartT',dblUseMaxDur);
+		getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecPseudoStartT',dblUseMaxDur,boolUseMex);
 	[dblMaxD,intZETALoc]= max(abs(vecRealDiff));
 	intSamples = numel(vecRealDiff);
 	intTrials = numel(vecPseudoStartT);
@@ -94,7 +99,7 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
 			%get temp offset
-			[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblUseMaxDur);
+			[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblUseMaxDur,boolUseMex);
 			
 			%assign data
 			cellRandT{intResampling} = vecRandT;
@@ -107,7 +112,7 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
 			%get temp offset
-			[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblUseMaxDur);
+			[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblUseMaxDur,boolUseMex);
 			
 			%assign data
 			cellRandT{intResampling} = vecRandT;
