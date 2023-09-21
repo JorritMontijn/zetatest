@@ -28,6 +28,8 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	%		- cellRandT; baseline temporal deviation matrix of jittered data
 	%		- cellRandDiff; deviation vectors for jittered data
 	%
+	%v1.3 - rev20230921
+	
 	%Version history:
 	%0.9 - 2021 October 29
 	%	Created by Jorrit Montijn
@@ -38,9 +40,8 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	%	clarify what it is the p-value of [by JM] 
 	%1.2 - 2023 August 25
 	%	Changed default jitter window to -2 to +2, same as zetatest [by JM] 
-	%1.3 - 2023 September 19
-	%	Vast improvement in computation time; 3x faster single-threaded, 10x faster multi-threaded 
-    %   (but note that YMMV) [by JM]  
+	%1.3 - 2023 September 21
+	%	Increased computation time, now computes at about 66% duration
 	
 	%% prep data
 	%ensure orientation
@@ -235,10 +236,12 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 		
 		if intPlot > 1
 			%set tol
-			[vecRef2T,cellSampleAssignments] = getTsRefT(vecTime,vecEventStarts(:,1),dblUseMaxDur);
-
+			dblSampInterval = median(diff(vecTime));
+			dblTol = dblSampInterval/100;
+			vecRef2T = uniquetol(vecRefT,dblTol);
+			
 			%build interpolated data
-			matTracePerTrialSR = getInterpolatedTimeSeries(vecTime,vecData,vecEventStarts(:,1),vecRef2T,cellSampleAssignments);
+			matTracePerTrialSR = getInterpolatedTimeSeries(vecTime,vecData,vecEventStarts(:,1),vecRef2T);
 			indRemPoints = vecRef2T<0 | vecRef2T>dblUseMaxDur;
 			vecRef2T(indRemPoints) = [];
 			matTracePerTrialSR(:,indRemPoints)=[];

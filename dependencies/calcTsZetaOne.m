@@ -16,20 +16,13 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 	intZETALoc = nan;
 	
 	%check parallel
-	if ~exist('boolUseParallel','var') || isempty(boolUseParallel)
-		objPool = gcp('nocreate');
-		if isempty(objPool) || ~isprop(objPool,'NumWorkers') || objPool.NumWorkers < 4
-			boolUseParallel = false;
-		else
-			boolUseParallel = true;
-		end
+	objPool = gcp('nocreate');
+	if isempty(objPool) || ~isprop(objPool,'NumWorkers') || objPool.NumWorkers < 4
+		boolUseParallel = false;
+	else
+		boolUseParallel = true;
 	end
-	try
-		[v1,v2]=findgtentries2_mex([1;2],[1;2],[1;2]);
-		boolUseMex = true;
-	catch
-		boolUseMex = false;
-	end
+	
 	%% reduce data
 	if size(vecEventStarts,2)>2,error([mfilename ':IncorrectMatrixForm'],'Incorrect input form for vecEventStarts; size must be [m x 1] or [m x 2]');end
 	%discard leading/lagging data
@@ -53,7 +46,7 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 	
 	%% get trial responses
 	[vecRealDiff,vecRealFrac,vecRealFracLinear,vecRefT] = ...
-		getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecPseudoStartT',dblUseMaxDur,boolUseMex);
+		getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecPseudoStartT',dblUseMaxDur);
 	[dblMaxD,intZETALoc]= max(abs(vecRealDiff));
 	intSamples = numel(vecRealDiff);
 	intTrials = numel(vecPseudoStartT);
@@ -63,8 +56,8 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 	cellRandT = cell(1,intResampNum);
 	cellRandDiff = cell(1,intResampNum);
 	vecMaxRandD = nan(1,intResampNum);
-    vecStartOnly = vecPseudoStartT(:);
-    intJitterDistro=1;
+	vecStartOnly = vecPseudoStartT(:);
+    intJitterDistro=2;
     if intJitterDistro == 1
     	vecJitterPerTrial = dblJitterSize*linspace(-dblUseMaxDur,dblUseMaxDur,intTrials)';
     	matJitterPerTrial = nan(intTrials,intResampNum);
@@ -77,13 +70,13 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
         for intResampling=1:intResampNum
             matJitterPerTrial(:,intResampling) = dblJitterSize*dblUseMaxDur*((rand(size(vecStartOnly))-0.5)*2);
         end
-    end
-
-    %% this part is only to check if matlab and python give the same exact results
-    % unfortunately matlab's randperm() and numpy's np.random.permutation give different outputs even with
-    % identical seeds and identical random number generators, so I've had to load in a table of random values here...
-    boolTest = false;
-    if boolTest
+	end
+	
+	%% this part is only to check if matlab and python give the same exact results
+	% unfortunately matlab's randperm() and numpy's np.random.permutation give different outputs even with
+	% identical seeds and identical random number generators, so I've had to load in a table of random values here...
+	boolTest = false;
+	if boolTest
 		fprintf('Loading deterministic jitter data for comparison with python\n')
 		warning([mfilename ':DebugMode'],'set boolTest to false in calcTsZetaOne.m to suppress this warning')
 		load('C:\Code\Python\zetapy\unit_tests\matJitterPerTrialTsZeta.mat');
@@ -99,7 +92,7 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
 			%get temp offset
-			[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblUseMaxDur,boolUseMex);
+			[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblUseMaxDur);
 			
 			%assign data
 			cellRandT{intResampling} = vecRandT;
@@ -112,7 +105,7 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
 			%get temp offset
-			[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblUseMaxDur,boolUseMex);
+			[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblUseMaxDur);
 			
 			%assign data
 			cellRandT{intResampling} = vecRandT;

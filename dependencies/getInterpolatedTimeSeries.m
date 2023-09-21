@@ -1,6 +1,6 @@
-function matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecEventStartT,vecRefT,cellSampleAssignments)
+function matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecEventStartT,vecRefT)
 	%getInterpolatedTimeSeries Builds common timeframe
-	%syntax: [vecRefT,matTracePerTrial] = getInterpolatedTimeSeries(vecTimestamps,vecData,vecEventStartT,vecRefT)
+	%syntax: matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecEventStartT,vecRefT)
 	%	input:
 	%	- vecTimestamps; times (s)
 	%	- vecData; data
@@ -31,7 +31,9 @@ function matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecE
 	for intTrial=1:numel(vecEventStartT)
 		%% get original times
 		dblStartT = vecEventStartT(intTrial);
-		vecSelectSamples = cellSampleAssignments{intTrial};
+		intStartT = max([1 find(vecTimestamps > (dblStartT + vecRefT(1)),1) - 1]);
+		intStopT = min([numel(vecTimestamps) find(vecTimestamps > (dblStartT + vecRefT(end)),1) + 1]);
+		vecSelectSamples = intStartT:intStopT;
 		
 		%% get data
 		vecUseTimes = vecTimestamps(vecSelectSamples);
