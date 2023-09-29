@@ -43,6 +43,9 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 	%% get spikes per trial
 	[cellTrialPerSpike1,cellTimePerSpike1] = getSpikesInTrial(vecSpikeTimes1,vecEventT1,dblUseMaxDur,true);
 	[cellTrialPerSpike2,cellTimePerSpike2] = getSpikesInTrial(vecSpikeTimes2,vecEventT2,dblUseMaxDur,true);
+	if sum(cellfun(@numel,cellTrialPerSpike1)) < 3 || sum(cellfun(@numel,cellTrialPerSpike2)) < 3
+		return;
+	end
 	
 	%% run normal
 	%normalize to cumsum(v1)+cumsum(v2) = 1
@@ -78,6 +81,10 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 			
 			vecUseRand2 = randperm(intTotT,intT2);
 			cellTimePerSpike2_Rand = cellAggregateTrials(vecUseRand2);
+			if sum(cellfun(@numel,cellTimePerSpike2_Rand)) < 3 || sum(cellfun(@numel,cellTimePerSpike1_Rand)) < 3
+				continue;
+			end
+			
 			%get difference
 			[vecRandSpikeT,vecRandDiff] = ...
 				getTempOffsetTwo(cellTimePerSpike1_Rand,cellTimePerSpike2_Rand,dblUseMaxDur);
@@ -99,6 +106,10 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 			
 			vecUseRand2 = randperm(intTotT,intT2);
 			cellTimePerSpike2_Rand = cellAggregateTrials(vecUseRand2);
+			if sum(cellfun(@numel,cellTimePerSpike2_Rand)) < 3 || sum(cellfun(@numel,cellTimePerSpike1_Rand)) < 3
+				continue;
+			end
+			
 			%get difference
 			[vecRandSpikeT,vecRandDiff] = ...
 				getTempOffsetTwo(cellTimePerSpike1_Rand,cellTimePerSpike2_Rand,dblUseMaxDur);
@@ -112,8 +123,8 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 	
 	%% calculate measure of effect size (for equal n, d' equals Cohen's d)
 	%take max-dev: zeta_raw
-	dblRandMu = mean(vecMaxRandD);
-	dblRandVar = var(vecMaxRandD);
+	dblRandMu = nanmean(vecMaxRandD);
+	dblRandVar = nanvar(vecMaxRandD);
 	
 	if boolDirectQuantile
 		%calculate statistical significance using empirical quantiles
