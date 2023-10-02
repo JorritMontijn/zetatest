@@ -29,23 +29,15 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 	dblStartT = max([vecSpikeTimes1(1) min(vecEventT1)-dblUseMaxDur*5*dblJitterSize]);
 	dblStopT = max(vecEventT1)+dblUseMaxDur*5*dblJitterSize;
 	vecSpikeTimes1(vecSpikeTimes1 < dblStartT | vecSpikeTimes1 > dblStopT) = [];
-	if numel(vecSpikeTimes1) < 3
-		return;
-	end
 	vecEventT2 = vecEventStarts2(:,1);
 	dblStartT = max([vecSpikeTimes2(1) min(vecEventT2)-dblUseMaxDur*5*dblJitterSize]);
 	dblStopT = max(vecEventT2)+dblUseMaxDur*5*dblJitterSize;
 	vecSpikeTimes2(vecSpikeTimes2 < dblStartT | vecSpikeTimes2 > dblStopT) = [];
-	if numel(vecSpikeTimes2) < 3
-		return;
-	end
+
 	
 	%% get spikes per trial
 	[cellTrialPerSpike1,cellTimePerSpike1] = getSpikesInTrial(vecSpikeTimes1,vecEventT1,dblUseMaxDur,true);
 	[cellTrialPerSpike2,cellTimePerSpike2] = getSpikesInTrial(vecSpikeTimes2,vecEventT2,dblUseMaxDur,true);
-	if sum(cellfun(@numel,cellTrialPerSpike1)) < 3 || sum(cellfun(@numel,cellTrialPerSpike2)) < 3
-		return;
-	end
 	
 	%% run normal
 	%normalize to cumsum(v1)+cumsum(v2) = 1

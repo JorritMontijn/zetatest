@@ -18,13 +18,13 @@ function [vecSpikeT,vecThisDiff,vecThisFrac1,vecSpikeTimes1,vecThisFrac2,vecSpik
 	intT2 = numel(cellTimePerSpike2);
 	
 	%spike fraction #1
-	vecUniqueSpikeFracs1 = (1:intSp1)/intT1;
-	vecThisFrac1 = interp1(vecSpikeTimes1,vecUniqueSpikeFracs1,vecSpikeT);
+	vecUniqueSpikeFracs1 = (1:intSp1)'/intT1;
+	vecThisFrac1 = interp1([0;vecSpikeTimes1;dblUseMaxDur],[0;vecUniqueSpikeFracs1;intSp1/intT1],vecSpikeT);
 	vecThisFrac1 = fillnans(vecThisFrac1,intSp1,intT1);
 	
 	%spike fraction #2
-	vecUniqueSpikeFracs2 = (1:intSp2)/intT2;
-	vecThisFrac2 = interp1(vecSpikeTimes2,vecUniqueSpikeFracs2,vecSpikeT);
+	vecUniqueSpikeFracs2 = (1:intSp2)'/intT2;
+	vecThisFrac2 = interp1([0;vecSpikeTimes2;dblUseMaxDur],[0;vecUniqueSpikeFracs2;intSp2/intT2],vecSpikeT);
 	vecThisFrac2 = fillnans(vecThisFrac2,intSp2,intT2);
 	
 	%take difference
@@ -32,18 +32,4 @@ function [vecSpikeT,vecThisDiff,vecThisFrac1,vecSpikeTimes1,vecThisFrac2,vecSpik
 	
 	%mean-subtract?
 	vecThisDiff = vecDeviation - mean(vecDeviation);
-end
-function vecThisFrac = fillnans(vecThisFrac,intSp,intT)
-	indIsNan = isnan(vecThisFrac);
-	if isnan(vecThisFrac(1)) || isnan(vecThisFrac(end))
-		indNanDiff = diff(indIsNan);
-	end
-	if isnan(vecThisFrac(1))
-		intLeadingNanLength1 = find(indNanDiff,1,'first');
-		vecThisFrac(1:intLeadingNanLength1) = 1/intT;
-	end
-	if isnan(vecThisFrac(end))
-		intLaggingNanLength1 = find(indNanDiff(end:-1:1),1,'first');
-		vecThisFrac((end-intLaggingNanLength1+1):end) = intSp/intT;
-	end
 end
