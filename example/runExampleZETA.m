@@ -122,7 +122,7 @@ sRate_pb.dblOnset = sRate_pb.dblOnset - dblBaselineDuration;
 
 %% run the time-series ZETA-test
 % take subselection of data
-intUseTrialNum = 480;
+intUseTrialNum = 960;
 vecStimulusStartTimesTs = vecStimulusStartTimes(1:intUseTrialNum);
 vecStimulusStopTimesTs = vecStimulusStopTimes(1:intUseTrialNum);
 matEventTimesTs = cat(2,vecStimulusStartTimesTs,vecStimulusStopTimesTs);
@@ -134,7 +134,7 @@ dblEndT = vecStimulusStopTimesTs(end) + dblUseMaxDur*5;
 dblSamplingRate = 50.0; % simulate acquisition rate
 dblSampleDur = 1/dblSamplingRate;
 vecTimestamps = dblStartT:dblSampleDur:dblEndT+dblSampleDur;
-vecSpikesBinned = histcounts(vecSpikeTimes1, vecTimestamps);
+vecSpikesBinned1 = histcounts(vecSpikeTimes1, vecTimestamps);
 vecTimestamps = vecTimestamps(1:(end-1));
 dblSmoothSd = 1;
 intSmoothRange = 2*ceil(dblSmoothSd);
@@ -143,17 +143,17 @@ vecFilt = vecFilt / sum(vecFilt);
 
 % pad array
 intPadSize = floor(numel(vecFilt)/2);
-vecData = padarray(vecSpikesBinned, [0 intPadSize],'replicate');
+vecData1 = padarray(vecSpikesBinned1, [0 intPadSize],'replicate');
 
 % filter
-vecData = conv(vecData, vecFilt, 'valid');
+vecData1 = conv(vecData1, vecFilt, 'valid');
 
 %set random seed
 rng(1,'twister');
 
 % time-series zeta-test with default parameters
 hTic3 = tic;
-dblTsZetaP = zetatstest(vecTimestamps, vecData, vecStimulusStartTimesTs);
+dblTsZetaP = zetatstest(vecTimestamps, vecData1, vecStimulusStartTimesTs);
 dblElapsedTime3=toc(hTic3);
 fprintf("\nDefault parameters (elapsed time: %.2f s):\ntime-series zeta-test p-value: %f\n",dblElapsedTime3,dblTsZetaP)
 
@@ -164,7 +164,7 @@ fprintf('\nRunning time-series zeta-test with specified parameters; This will ta
 
 % run test
 hTic4 = tic;
-[dblTsZetaP2, sZetaTs] = zetatstest(vecTimestamps, vecData, matEventTimesTs,dblUseMaxDur, intResampNum, intPlot, boolDirectQuantile, dblJitterSize);
+[dblTsZetaP2, sZetaTs] = zetatstest(vecTimestamps, vecData1, matEventTimesTs,dblUseMaxDur, intResampNum, intPlot, boolDirectQuantile, dblJitterSize);
 dblElapsedTime4 = toc(hTic4);
 fprintf("\nSpecified parameters (elapsed time: %.2f s):\ntime-series zeta-test p-value: %f\nt-test p-value: %f\n",dblElapsedTime4,dblTsZetaP,sZetaTs.dblMeanP)
 
@@ -187,4 +187,22 @@ vecTrials2 = sStim.Orientation==60;
 dblZetaUnpaired1 = zetatest2(vecSpikeTimes1,matEventTimes(vecTrials1,:),vecSpikeTimes1,matEventTimes(vecTrials2,:),boolPairedTest,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize);
 
 %case 2b: is neuron 2 responding differently to gratings oriented at 30 and 60 degrees?
-dblZetaUnpaired2 = zetatest2(vecSpikeTimes2,matEventTimes(vecTrials1,:),vecSpikeTimes2,matEventTimes(vecTrials2,:),boolPairedTest,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize);
+dblZetaUnpaired2 = zetatest2b(vecSpikeTimes1,matEventTimes(vecTrials1,:),vecSpikeTimes1,matEventTimes(vecTrials2,:),dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile);
+
+%% two-sample TS-ZETA test
+%get trials
+indUseTrialsTs = ismember(1:numel(sStim.Orientation),1:intUseTrialNum);
+vecTrials1 = sStim.Orientation==30&indUseTrialsTs;
+vecTrials2 = sStim.Orientation==60&indUseTrialsTs;
+
+%get data for neuron 2
+vecTimestamps = dblStartT:dblSampleDur:dblEndT+dblSampleDur;
+vecData2 = conv(padarray(histcounts(vecSpikeTimes2, vecTimestamps), [0 intPadSize],'replicate'), vecFilt, 'valid');
+vecTimestamps = vecTimestamps(1:(end-1));
+
+%case 2a: is neuron 1 responding differently to gratings oriented at 30 and 60 degrees?
+intPlot = 3;
+intResampNum = 10000;
+boolDirectQuantile = false;
+dblSuperResFactor = 1;
+dblTsZeta2 = zetatstest2b(vecTimestamps,vecData1,matEventTimesTs(vecTrials1,:),vecTimestamps,vecData1,matEventTimesTs(vecTrials2,:),dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblSuperResFactor)

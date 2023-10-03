@@ -1,6 +1,6 @@
-function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTimes2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize)
+function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTimes2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile)
 	%zetatest2 Calculates p-value for difference in responsiveness between two neurons
-	%syntax: [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTimes2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize)
+	%syntax: [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTimes2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile)
 	%
 	%required inputs:
 	%	- vecSpikeTimes1 [S x 1]: spike times (in seconds) for neuron 1
@@ -15,7 +15,6 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	%	- intPlot: integer, plotting switch (0=none, 1=inst. rate only, 2=traces only, 3=raster plot as well) (default: 0)
 	%	- boolDirectQuantile; boolean, switch to use the empirical null-distribution rather than the
 	%								Gumbel approximation (default: false) [Note: requires many resamplings!]
-	%	- dblJitterSize; scalar, sets the temporal jitter window relative to dblUseMaxDur (default: 2)
 	%
 	%output:
 	%	- dblZetaP; p-value based on Zenith of Event-based Time-locked Anomalies
@@ -53,6 +52,8 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	%	Created by Jorrit Montijn
 	%0.2 - 11 January 2022
 	%	Added paired/unpaired testing, updated syntax & help [by JM]
+	%0.3 - 28 Sept 2023
+	%	New procedure using trial swapping [by JM]
 	
 	%% prep data
 	%ensure orientation
@@ -64,6 +65,7 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	%calculate stim/base difference?
 	boolStopSupplied = false;
 	dblMeanZ = nan;
+	dblMeanP = nan;
 	if size(matEventTimes1,2) > 2
 		matEventTimes1 = matEventTimes1';
 	end
@@ -73,12 +75,7 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	if size(matEventTimes1,2) == 2 && size(matEventTimes2,2) == 2
 		boolStopSupplied = true;
 	end
-	
-	%paired dur
-	if ~exist('boolPairedTest','var') || isempty(boolPairedTest)
-		boolPairedTest = false;
-	end
-	
+
 	%trial dur
 	if ~exist('dblUseMaxDur','var') || isempty(dblUseMaxDur)
 		dblUseMaxDur = min([min(diff(matEventTimes1(:,1))) min(diff(matEventTimes2(:,1)))]);
@@ -98,18 +95,13 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	if ~exist('boolDirectQuantile','var') || isempty(boolDirectQuantile)
 		boolDirectQuantile = false;
 	end
-	
-	%get dblJitterSize
-	if ~exist('dblJitterSize','var') || isempty(dblJitterSize)
-		dblJitterSize = 2;
-	end
-	
+
 	%% get zeta
 	vecEventStarts1 = matEventTimes1(:,1);
 	vecEventStarts2 = matEventTimes2(:,1);
 	if numel(vecEventStarts1) > 1 && (numel(vecSpikeTimes1)+numel(vecSpikeTimes2)) > 0 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
 		[vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-			calcZetaTwo(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize);
+			calcZetaTwo(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,dblUseMaxDur,intResampNum,boolDirectQuantile);
 	else
 		intZETALoc = nan;
 	end
@@ -181,11 +173,7 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 		vecMu2 = vecMu_Dur2 - vecMu_Pre2;
 		
 		%get metrics
-		if boolPairedTest
-			[h,dblMeanP,ci,stats]=ttest(vecMu1,vecMu2);
-		else
-			[h,dblMeanP,ci,stats]=ttest2(vecMu1,vecMu2);
-		end
+		[h,dblMeanP,ci,stats]=ttest2(vecMu1,vecMu2);
 		dblMeanZ = -norminv(dblMeanP/2);
 	end
 	

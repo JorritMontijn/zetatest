@@ -42,7 +42,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	%1.2 - 2023 August 25
 	%	Changed default jitter window to -2 to +2, same as zetatest [by JM] 
 	%1.3 - 2023 September 21
-	%	Increased computation time, now computes at about 66% duration
+	%	Improved computation time, now computes at about 66% duration
 	
 	%% prep data
 	%ensure orientation

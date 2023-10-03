@@ -1,8 +1,8 @@
 function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-		calcZetaTwo(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolUseParallel)
+		calcZetaTwo(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,dblUseMaxDur,intResampNum,boolDirectQuantile,boolUseParallel)
 	%calcZetaTwo Calculates neuronal responsiveness difference
 	%[vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-	%	calcZetaTwo(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolUseParallel)
+	%	calcZetaTwo(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,dblUseMaxDur,intResampNum,boolDirectQuantile,boolUseParallel)
 	
 	%% check inputs and pre-allocate error output
 	vecSpikeT = [];
@@ -26,12 +26,12 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 	%% reduce spikes
 	if size(vecEventStarts1,2)>2,error([mfilename ':IncorrectMatrixForm'],'Incorrect input form for vecEventStarts; size must be [m x 1] or [m x 2]');end
 	vecEventT1 = vecEventStarts1(:,1);
-	dblStartT = max([vecSpikeTimes1(1) min(vecEventT1)-dblUseMaxDur*5*dblJitterSize]);
-	dblStopT = max(vecEventT1)+dblUseMaxDur*5*dblJitterSize;
+	dblStartT = max([vecSpikeTimes1(1) min(vecEventT1)-dblUseMaxDur]);
+	dblStopT = max(vecEventT1)+dblUseMaxDur*2;
 	vecSpikeTimes1(vecSpikeTimes1 < dblStartT | vecSpikeTimes1 > dblStopT) = [];
 	vecEventT2 = vecEventStarts2(:,1);
-	dblStartT = max([vecSpikeTimes2(1) min(vecEventT2)-dblUseMaxDur*5*dblJitterSize]);
-	dblStopT = max(vecEventT2)+dblUseMaxDur*5*dblJitterSize;
+	dblStartT = max([vecSpikeTimes2(1) min(vecEventT2)-dblUseMaxDur]);
+	dblStopT = max(vecEventT2)+dblUseMaxDur*2;
 	vecSpikeTimes2(vecSpikeTimes2 < dblStartT | vecSpikeTimes2 > dblStopT) = [];
 
 	
@@ -113,23 +113,11 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 		end
 	end
 	
-	%% calculate measure of effect size (for equal n, d' equals Cohen's d)
+	%% calculate p
 	%take max-dev: zeta_raw
 	vecMaxRandD(isnan(vecMaxRandD))=dblMaxD;
-	dblRandMu = nanmean(vecMaxRandD);
-	dblRandVar = nanvar(vecMaxRandD);
 	
-	if boolDirectQuantile
-		%calculate statistical significance using empirical quantiles
-		%define p-value
-		dblZetaP = 1 - (sum(dblMaxD>vecMaxRandD)/(1+numel(vecMaxRandD)));
-		
-		%transform to output z-score
-		dblZETA = -norminv(dblZetaP/2);
-	else
-		%calculate statistical significance using Gumbel distribution
-		[dblZetaP,dblZETA] = getGumbel(dblRandMu,dblRandVar,dblMaxD);
-		%fprintf('Pre-correction d=%.3f,post-correction z=%.3f (p=%.3f)\n',dblD,dblZETA,dblP);
-	end
+	%get p-value
+	[dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
 end
 
