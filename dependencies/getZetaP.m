@@ -15,7 +15,7 @@ function [dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile)
 		for i=1:numel(dblMaxD)
 			if dblMaxD < min(vecMaxRandD) || isnan(dblMaxD)
 				dblValue = 0;
-			elseif dblMaxD > max(vecMaxRandD) || isinf(dblMaxD)
+			elseif dblMaxD > max(vecMaxRandD) || isinf(dblMaxD) || numel(vecMaxRandD) < 3
 				dblValue = numel(vecMaxRandD);
 			else
 				dblValue = interp1(vecMaxRandD,1:numel(vecMaxRandD),dblMaxD);
