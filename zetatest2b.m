@@ -169,8 +169,8 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 		
 		
 		%difference
-		vecMu1 = vecMu_Dur1 - vecMu_Pre1;
-		vecMu2 = vecMu_Dur2 - vecMu_Pre2;
+		vecMu1 = vecMu_Dur1;
+		vecMu2 = vecMu_Dur2;
 		
 		%get metrics
 		[h,dblMeanP,ci,stats]=ttest2(vecMu1,vecMu2);
