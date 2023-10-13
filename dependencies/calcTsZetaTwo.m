@@ -42,6 +42,17 @@ function [vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dbl
 	vecTraceT2(indRemoveEntries2) = [];
 	vecTraceAct2(indRemoveEntries2) = [];
 	
+	%rescale
+	dblMin = min(min(vecTraceAct1),min(vecTraceAct2));
+	dblMax = max(max(vecTraceAct1),max(vecTraceAct2));
+	dblRange = (dblMax-dblMin);
+	if dblRange == 0
+		dblRange = 1;
+		warning([mfilename ':ZeroVar'],'Input data has zero variance');
+	end
+	vecTraceAct1 = (vecTraceAct1-dblMin)./dblRange;
+	vecTraceAct2 = (vecTraceAct2-dblMin)./dblRange;
+	
 	%% build reference time and matrices
 	%time
 	vecRefT1 = getTsRefT(vecTraceT1,vecEventStarts1,dblUseMaxDur);

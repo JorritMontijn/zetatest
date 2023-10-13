@@ -36,6 +36,16 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 	vecTraceT(indRemoveEntries) = [];
 	vecTraceAct(indRemoveEntries) = [];
 	
+	%rescale
+	dblMin = min(vecTraceAct);
+	dblMax = max(vecTraceAct);
+	dblRange = (dblMax-dblMin);
+	if dblRange == 0
+		dblRange = 1;
+		warning([mfilename ':ZeroVar'],'Input data has zero variance');
+	end
+	vecTraceAct = (vecTraceAct-dblMin)./dblRange;
+	
 	%stitch trials
 	[vecPseudoT,vecPseudoTrace,vecPseudoStartT] = getPseudoTimeSeries(vecTraceT,vecTraceAct,vecEventStarts,dblUseMaxDur);
 	vecPseudoTrace = vecPseudoTrace - min(vecPseudoTrace(:));
