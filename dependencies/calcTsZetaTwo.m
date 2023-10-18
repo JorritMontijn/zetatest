@@ -1,10 +1,17 @@
-function [vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
+function [vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dblZETA,intZETALoc,matTracePerTrial1,matTracePerTrial2] = ...
 		calcTsZetaTwo(vecTraceT1,vecTraceAct1,vecEventStarts1,vecTraceT2,vecTraceAct2,vecEventStarts2,dblSuperResFactor,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolUseParallel)
 	%calcTsZetaTwo Calculates neuronal responsiveness index zeta
 	%[vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
 	%	calcTsZetaTwo(vecTraceT1,vecTraceAct1,vecEventStarts1,vecTraceT2,vecTraceAct2,vecEventStarts2,dblSuperResFactor,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolUseParallel)
 	
-	%% check inputs and pre-allocate error output
+	%%
+	global boolWithReplacement
+	if isempty(boolWithReplacement)
+		boolWithReplacement = false;
+	end
+	boolLocalWithReplacement = boolWithReplacement;
+	
+    %% check inputs and pre-allocate error output
 	vecRefT = [];
 	vecRealDiff = [];
 	vecRealFrac1 = [];
@@ -85,10 +92,14 @@ function [vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dbl
 			%for shuffle of cond1: take 10 trials from set of 110
 			%for shuffle of cond2: take 100 trials from set of 110
 			
-			vecUseRand1 = randperm(intTotTrials,intTrials1);
+            if boolLocalWithReplacement
+				vecUseRand1 = randi(intTotTrials,[1,intTrials1]);
+				vecUseRand2 = randi(intTotTrials,[1,intTrials2]);
+			else
+				vecUseRand1 = randperm(intTotTrials,intTrials1);
+				vecUseRand2 = randperm(intTotTrials,intTrials2);
+			end
 			matTrace1_Rand = matAggregateTrials(vecUseRand1,:);
-			
-			vecUseRand2 = randperm(intTotTrials,intTrials2);
 			matTrace2_Rand = matAggregateTrials(vecUseRand2,:);
 			
 			%get difference
@@ -105,10 +116,14 @@ function [vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dbl
 			%for shuffle of cond1: take 10 trials from set of 110
 			%for shuffle of cond2: take 100 trials from set of 110
 			
-			vecUseRand1 = randperm(intTotTrials,intTrials1);
+            if boolLocalWithReplacement
+				vecUseRand1 = randi(intTotTrials,[1,intTrials1]);
+				vecUseRand2 = randi(intTotTrials,[1,intTrials2]);
+			else
+				vecUseRand1 = randperm(intTotTrials,intTrials1);
+				vecUseRand2 = randperm(intTotTrials,intTrials2);
+			end
 			matTrace1_Rand = matAggregateTrials(vecUseRand1,:);
-			
-			vecUseRand2 = randperm(intTotTrials,intTrials2);
 			matTrace2_Rand = matAggregateTrials(vecUseRand2,:);
 			
 			%get difference

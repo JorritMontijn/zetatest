@@ -108,7 +108,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	vecEventStarts1 = matEventTimes1(:,1);
 	vecEventStarts2 = matEventTimes2(:,1);
 	if numel(vecEventStarts1) > 1 && numel(vecTime1) > 1 && numel(vecEventStarts2) > 1 && numel(vecTime2) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
-		[vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
+		[vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dblZETA,intZETALoc,matTracePerTrial1,matTracePerTrial2] = ...
 			calcTsZetaTwo(vecTime1,vecValue1,vecEventStarts1,vecTime2,vecValue2,vecEventStarts2,dblSuperResFactor,dblUseMaxDur,intResampNum,boolDirectQuantile);
 	else
 		intZETALoc = nan;
@@ -235,22 +235,22 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		end
 		if intPlot > 1
 			subplot(2,3,1)
-			[vecRefT21,matTracePerTrial1] = getTraceInTrial(vecTime1,vecValue1,vecEventStarts1,dblSamplingInterval,dblUseMaxDur);
-			imagesc(vecRefT21,1:size(matTracePerTrial1,1),matTracePerTrial1);
+			imagesc(vecRefT,1:size(matTracePerTrial1,1),matTracePerTrial1,[0 1]);
 			colormap(hot);
 			xlabel('Time after event (s)');
 			ylabel('Trial #');
-			title('Z-scored activation data 1');
+			title('Rescaled data, condition 1');
+			colorbar;
 			fixfig;
 			grid off;
 			
 			subplot(2,3,4)
-			[vecRefT22,matTracePerTrial2] = getTraceInTrial(vecTime2,vecValue2,vecEventStarts2,dblSamplingInterval,dblUseMaxDur);
-			imagesc(vecRefT22,1:size(matTracePerTrial2,1),matTracePerTrial2);
+			imagesc(vecRefT,1:size(matTracePerTrial2,1),matTracePerTrial2,[0 1]);
 			colormap(hot);
 			xlabel('Time after event (s)');
 			ylabel('Trial #');
-			title('Z-scored activation data 2');
+			title('Rescaled data, condition 2');
+			colorbar;
 			fixfig;
 			grid off;
 		end
@@ -261,7 +261,8 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		plot(vecRefT,vecRealFrac2);
 		title(sprintf('Real data, data 1 - data 2'));
 		xlabel('Time after event (s)');
-		ylabel('Fractional value in trial');
+		ylabel('Cumululative sum in trial');
+		xlim([0 dblUseMaxDur]);
 		fixfig
 		
 		subplot(2,3,3)
@@ -279,6 +280,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		else
 			title(sprintf('ZETA=%.3f (p=%.3f)',dblZETA,dblZetaP));
 		end
+		xlim([0 dblUseMaxDur]);
 		fixfig
 	end
 	

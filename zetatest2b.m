@@ -72,8 +72,15 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	if size(matEventTimes2,2) > 2
 		matEventTimes2 = matEventTimes2';
 	end
+	
+	%stops supplied?
 	if size(matEventTimes1,2) == 2 && size(matEventTimes2,2) == 2
 		boolStopSupplied = true;
+		
+		%trial dur
+		if ~exist('dblUseMaxDur','var') || isempty(dblUseMaxDur)
+			dblUseMaxDur = min([min(matEventTimes1(:,2)-matEventTimes1(:,1)) min(matEventTimes2(:,2)-matEventTimes2(:,1))]);
+		end
 	end
 
 	%trial dur
