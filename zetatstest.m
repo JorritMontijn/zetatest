@@ -1,6 +1,6 @@
-function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize,dblSuperResFactor)
+function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize,boolStitch,dblSuperResFactor)
 	%zetatstest Calculates responsiveness index zeta for timeseries data
-	%syntax: [dblZetaP,sZETA] = zetatstest(vecTime,vecData,vecEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize,dblSuperResFactor)
+	%syntax: [dblZetaP,sZETA] = zetatstest(vecTime,vecData,vecEventTimes,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize,boolStitch,dblSuperResFactor)
 	%	input:
 	%	- vecTime [N x 1]: time (s) corresponding to entries in vecValue
 	%	- vecData [N x 1]: data values (e.g., calcium imaging dF/F0)
@@ -12,7 +12,8 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	%	- boolDirectQuantile; boolean, switch to use the empirical
 	%							null-distribution rather than the Gumbel approximation (default: false)
 	%	- dblJitterSize: scalar, sets the temporal jitter window relative to dblUseMaxDur (default: 2)
-	%	- dblSuperResFactor
+	%	- boolStitch; boolean, use data-stitching to ensure continuous time (default: true)
+	%	- dblSuperResFactor; scalar, upsampling of data when calculating zeta (default: 100)
 	%
 	%	output:
 	%	- dblZetaP; Zenith of Event-based Time-locked Anomalies: responsiveness p-value
@@ -20,17 +21,21 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	%		- dblZetaP; p-value corresponding to ZETA
 	%		- dblZETA; ZETA responsiveness statistic
 	%		- dblD; temporal deviation value underlying ZETA
+	%		- vecTimeSR; timestamps for upscaled data
+	%		- matDataSR; upscaled data values
 	%		- dblPeakT; time corresponding to ZETA
 	%		- intPeakIdx; entry corresponding to ZETA
-	%		- dblMeanD; Cohen's D based on mean-rate stim/base difference
+	%		- dblMeanZ; z-score based on mean-rate stim/base difference
 	%		- dblMeanP; p-value based on mean-rate stim/base difference
-	%		- vecTraceT: timestamps of trace entries (corresponding to vecZ)
+	%		- vecMu_Dur; within-stimulus values used in mean-rate difference calculation
+	%		- vecMu_Pre; outside-stimulus values used in mean-rate difference calculation
+	%		- vecTime: timestamps of entries (corresponding to vecD)
 	%		- vecD; temporal deviation vector of data
-	%		- cellRandT; baseline temporal deviation matrix of jittered data
-	%		- cellRandDiff; deviation vectors for jittered data
+	%		- cellRandT; reference time vectors for randomly jittered data
+	%		- cellRandDiff; deviation vectors for randomly jittered data
 	%
-	%v1.3 - rev20230921
-	
+	%v1.4 - rev20231019
+
 	%Version history:
 	%0.9 - 2021 October 29
 	%	Created by Jorrit Montijn
@@ -43,6 +48,8 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	%	Changed default jitter window to -2 to +2, same as zetatest [by JM] 
 	%1.3 - 2023 September 21
 	%	Improved computation time, now computes at about 66% duration
+	%1.4 - 2023 October 19
+	%	Updated outputs and documentation
 	
 	%% prep data
 	%ensure orientation
@@ -89,7 +96,13 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	if ~exist('dblJitterSize','var') || isempty(dblJitterSize)
 		dblJitterSize = 2; %original:1
 	end
+	assert(dblJitterSize>0,[mfilename ':WrongJitterInput'], sprintf('dblJitterSize must be a positive scalar, you requested %.3f',dblJitterSize));
 	
+	%get boolStitch
+	if ~exist('boolStitch','var') || isempty(boolStitch)
+		boolStitch = true;
+	end
+
 	%get dblJitterSize
 	if ~exist('dblSuperResFactor','var') || isempty(dblSuperResFactor)
 		dblSuperResFactor = 100; %original:100
@@ -118,7 +131,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	
     %% get timeseries zeta
 	[vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-		calcTsZetaOne(vecTime,vecData,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,dblSuperResFactor);
+		calcTsZetaOne(vecTime,vecData,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,dblSuperResFactor);
 	
 	%get location
 	dblMaxDTime = vecRefT(intZETALoc);
@@ -288,8 +301,8 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 	%% build optional output structure
 	if nargout > 1
 		sZETA = struct;
-		sZETA.dblZETA = dblZETA;
 		sZETA.dblZetaP = dblZetaP;
+		sZETA.dblZETA = dblZETA;
 		sZETA.dblD = dblD;
 		sZETA.vecTimeSR = vecRef2T;
 		sZETA.matDataSR = matTracePerTrialSR;

@@ -1,7 +1,8 @@
-function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,boolUseParallel,intJitterDistro)
+function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
+		calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,boolUseParallel)
     %calcZetaOne Calculates neuronal responsiveness index zeta
     %[vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-    %	calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,boolUseParallel,intJitterDistro)
+    %	calcZetaOne(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,boolUseParallel)
 
     %% check inputs and pre-allocate error output
     vecSpikeT = [];
@@ -26,16 +27,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
         else
             boolUseParallel = true;
         end
-    end
-    if ~exist('intJitterDistro','var') || isempty(intJitterDistro)
-        intJitterDistro = 1;
-    end
-    if intJitterDistro == 1
-        intTrialN = max(size(vecEventStarts));
-        if intResampNum > factorial(intTrialN)
-            warning([mfilename ':JitterDistro'],'Requested # of resamplings is larger than factorial(intTrialNum); duplicates will exist');
-        end
-    end
+	end
 
     %% reduce spikes
     if size(vecEventStarts,2)>2,error([mfilename ':IncorrectMatrixForm'],'Incorrect input form for vecEventStarts; size must be [m x 1] or [m x 2]');end

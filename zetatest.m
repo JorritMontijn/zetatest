@@ -57,7 +57,7 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
 	%Note: zetatest will use parallel computing if you have an active worker pool; if not, it will
 	%not start a parallel pool itself.
 	%
-	%v3.7 - 13 Sept 2023
+	%v3.7 - 19 Oct 2023
 	
 	%Version history:
 	%0.9 - 27 June 2019
@@ -113,6 +113,8 @@ function [dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes,matEventTi
     %   Fixed plotting of onsets which apparently broke some time in the past... [by JM]
     %3.6.1 - 25 August 2023
     %   Added time-sorting step to vecSpikeTimes in case spikes are supplied in random order [by JM]
+	%3.7 - 19 Oct 2023
+    %   Updated documentation [by JM]
 
 	%% prep data
 	%ensure orientation

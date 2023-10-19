@@ -1,8 +1,8 @@
 function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-		calcTsZetaOne(vecTraceT,vecTraceAct,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,dblSuperResFactor)
+		calcTsZetaOne(vecTraceT,vecTraceAct,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,dblSuperResFactor)
 	%calcTsZeta Calculates neuronal responsiveness index zeta for timeseries data
 	%[vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-	%	calcTsZetaOne(vecTraceT,vecTraceAct,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,dblSuperResFactor)
+	%	calcTsZetaOne(vecTraceT,vecTraceAct,vecEventStarts,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolStitch,dblSuperResFactor)
 	
 	%% check inputs and pre-allocate error output
 	vecRefT = [];
@@ -46,8 +46,16 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 	end
 	vecTraceAct = (vecTraceAct-dblMin)./dblRange;
 	
+	%% build pseudo data, stitching stimulus periods
+	if boolStitch
+		[vecPseudoT,vecPseudoTrace,vecPseudoStartT] = getPseudoTimeSeries(vecTraceT,vecTraceAct,vecEventStarts,dblUseMaxDur);
+	else
+		vecPseudoT = vecTraceT;
+		vecPseudoTrace = vecTraceAct;
+		vecPseudoStartT = vecEventStarts;
+	end
+	
 	%stitch trials
-	[vecPseudoT,vecPseudoTrace,vecPseudoStartT] = getPseudoTimeSeries(vecTraceT,vecTraceAct,vecEventStarts,dblUseMaxDur);
 	vecPseudoTrace = vecPseudoTrace - min(vecPseudoTrace(:));
 	if numel(vecPseudoT) < 3
 		return;
@@ -67,19 +75,19 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 	cellRandDiff = cell(1,intResampNum);
 	vecMaxRandD = nan(1,intResampNum);
 	vecStartOnly = vecPseudoStartT(:);
-    intJitterDistro=2;
-    if intJitterDistro == 1
-    	vecJitterPerTrial = dblJitterSize*linspace(-dblUseMaxDur,dblUseMaxDur,intTrials)';
-    	matJitterPerTrial = nan(intTrials,intResampNum);
-    	for intResampling=1:intResampNum
-    		matJitterPerTrial(:,intResampling) = vecJitterPerTrial(randperm(numel(vecJitterPerTrial)));
-    	end
-    else
-    	%uniform jitters between dblJitterSize*[-tau, +tau]
-        matJitterPerTrial = nan(intTrials,intResampNum);
-        for intResampling=1:intResampNum
-            matJitterPerTrial(:,intResampling) = dblJitterSize*dblUseMaxDur*((rand(size(vecStartOnly))-0.5)*2);
-        end
+	intJitterDistro=2;
+	if intJitterDistro == 1
+		vecJitterPerTrial = dblJitterSize*linspace(-dblUseMaxDur,dblUseMaxDur,intTrials)';
+		matJitterPerTrial = nan(intTrials,intResampNum);
+		for intResampling=1:intResampNum
+			matJitterPerTrial(:,intResampling) = vecJitterPerTrial(randperm(numel(vecJitterPerTrial)));
+		end
+	else
+		%uniform jitters between dblJitterSize*[-tau, +tau]
+		matJitterPerTrial = nan(intTrials,intResampNum);
+		for intResampling=1:intResampNum
+			matJitterPerTrial(:,intResampling) = dblJitterSize*dblUseMaxDur*((rand(size(vecStartOnly))-0.5)*2);
+		end
 	end
 	
 	%% this part is only to check if matlab and python give the same exact results
@@ -95,7 +103,7 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 		rng(1,'mt19937ar');
 	end
 	
-    %% run bootstraps
+	%% run bootstraps
 	if boolUseParallel
 		parfor intResampling=1:intResampNum
 			%% get random subsample
@@ -125,13 +133,13 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 	end
 	
 	%% calculate significance
-    vecMaxRandD = vecMaxRandD(~isnan(vecMaxRandD));
-    if numel(vecMaxRandD) < 3
-        warning([mfilename ':DataTooSparse'],"Data is too sparse for jittering control; defaulting to p=1.0");
-        dblZetaP = 1.0;
-        dblZETA = 0;
-    else
-	    [dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
-    end
+	vecMaxRandD = vecMaxRandD(~isnan(vecMaxRandD));
+	if numel(vecMaxRandD) < 3
+		warning([mfilename ':DataTooSparse'],"Data is too sparse for jittering control; defaulting to p=1.0");
+		dblZetaP = 1.0;
+		dblZETA = 0;
+	else
+		[dblZetaP,dblZETA] = getZetaP(dblMaxD,vecMaxRandD,boolDirectQuantile);
+	end
 end
 

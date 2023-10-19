@@ -1,6 +1,6 @@
-function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTimes2,matEventTimes2,boolPairedTest,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize)
+function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTimes2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile)
 	%zetatest2 Calculates p-value for difference in responsiveness between two neurons
-	%syntax: [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTimes2,matEventTimes2,boolPairedTest,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize)
+	%syntax: [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTimes2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile)
 	%
 	%required inputs:
 	%	- vecSpikeTimes1 [S x 1]: spike times (in seconds) for neuron 1
@@ -8,51 +8,40 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	%	- vecSpikeTimes2 [S x 1]: spike times (in seconds) for neuron 2
 	%	- vecEventTimes2 [T x 1]: event on times (s) for neuron 2, or [T x 2] including event off times
 	%optional inputs:
-	%	- boolPairedTest: boolean, use paired or unpaired testing (default=unpaired; boolPairedTest=false). See note below.
 	%	- dblUseMaxDur: float (s), window length for calculating ZETA: ignore all spikes beyond this duration after event onset
 	%								(default: minimum of all event onsets to next event onset)
-	%	- intResampNum: integer, number of resamplings (default: 100)
+	%	- intResampNum: integer, number of resamplings (default: 250)
 	%	- intPlot: integer, plotting switch (0=none, 1=inst. rate only, 2=traces only, 3=raster plot as well) (default: 0)
 	%	- boolDirectQuantile; boolean, switch to use the empirical null-distribution rather than the
 	%								Gumbel approximation (default: false) [Note: requires many resamplings!]
-	%	- dblJitterSize; scalar, sets the temporal jitter window relative to dblUseMaxDur (default: 2)
 	%
 	%output:
 	%	- dblZetaP; p-value based on Zenith of Event-based Time-locked Anomalies
 	%	- sZETA; structure with fields:
+	%		- dblZetaP; p-value corresponding to ZETA
 	%		- dblZETA; responsiveness z-score (i.e., >2 is significant)
 	%		- dblD; temporal deviation value underlying ZETA
 	%		- dblP; p-value corresponding to ZETA
 	%		- dblPeakT; time corresponding to ZETA
 	%		- intPeakIdx; entry corresponding to ZETA
-	%		- dblMeanD; Cohen's D based on mean-rate stim/base difference
+	%		- dblMeanZ; z-score based on mean-rate stim/base difference
 	%		- dblMeanP; p-value based on mean-rate stim/base difference
+	%		- vecMu1; average spiking rate values per event underlying t-test for condition 1
+	%		- vecMu2; average spiking rate values per event underlying t-test for condition 2
 	%		- vecSpikeT: timestamps of spike times (corresponding to vecD)
 	%		- vecD; temporal deviation vector of data
-	%		- cellRandDiff; null-hypothesis temporal deviation vectors of jittered data
+	%		- cellRandDiff; timestamps for null-hypothesis resampled data
+	%		- cellRandDiff; null-hypothesis temporal deviation vectors of resampled data
 	%		- dblD_InvSign; largest peak of inverse sign to ZETA (i.e., -ZETA)
 	%		- dblPeakT_InvSign; time corresponding to -ZETA
 	%		- intPeakIdx_InvSign; entry corresponding to -ZETA
 	%		- dblUseMaxDur; window length used to calculate ZETA
 	%
-	%*Note on paired versus unpaired testing*
-	%The "paired" two-sample zeta-test means the temporal jitters used to estimate the null
-	%distribution are identical for the two neurons. This can be useful when two neurons are
-	%recorded simultaneously and you wish to test whether they respond differently. With paired
-	%testing, any temporally localized noise (e.g., movement or optogenetic artifacts) present
-	%in both neurons can cancel each other out and raise the statistical sensitivity. However, this
-	%obviously only makes sense if the neurons are recorded simultaneously and when they are equally
-	%affected by noise. So to summarize when to use:
-	%- Paired: simultaneously recorded & similarly noise-affected neurons from the same experiment
-	%- Unpaired: all other cases (e.g., does a neuron respond differently to two stimulus sets?)
-	%
-	%v0.2 - 11 January 2022
+	%v1.0 - rev20231019
 	
 	%Version history:
-	%0.1 - 7 Dec 2021
-	%	Created by Jorrit Montijn
-	%0.2 - 11 January 2022
-	%	Added paired/unpaired testing, updated syntax & help [by JM]
+	%1.0 - 2023 October 19
+	%	Final release candidate [Created by Jorrit Montijn]
 	
 	%% prep data
 	%ensure orientation
@@ -64,21 +53,24 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	%calculate stim/base difference?
 	boolStopSupplied = false;
 	dblMeanZ = nan;
+	dblMeanP = nan;
 	if size(matEventTimes1,2) > 2
 		matEventTimes1 = matEventTimes1';
 	end
 	if size(matEventTimes2,2) > 2
 		matEventTimes2 = matEventTimes2';
 	end
+	
+	%stops supplied?
 	if size(matEventTimes1,2) == 2 && size(matEventTimes2,2) == 2
 		boolStopSupplied = true;
+		
+		%trial dur
+		if ~exist('dblUseMaxDur','var') || isempty(dblUseMaxDur)
+			dblUseMaxDur = min([min(matEventTimes1(:,2)-matEventTimes1(:,1)) min(matEventTimes2(:,2)-matEventTimes2(:,1))]);
+		end
 	end
-	
-	%paired dur
-	if ~exist('boolPairedTest','var') || isempty(boolPairedTest)
-		boolPairedTest = false;
-	end
-	
+
 	%trial dur
 	if ~exist('dblUseMaxDur','var') || isempty(dblUseMaxDur)
 		dblUseMaxDur = min([min(diff(matEventTimes1(:,1))) min(diff(matEventTimes2(:,1)))]);
@@ -86,7 +78,7 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	
 	%get resampling num
 	if ~exist('intResampNum','var') || isempty(intResampNum)
-		intResampNum = 500;
+		intResampNum = 250;
 	end
 	
 	%get intPlot
@@ -98,18 +90,13 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	if ~exist('boolDirectQuantile','var') || isempty(boolDirectQuantile)
 		boolDirectQuantile = false;
 	end
-	
-	%get dblJitterSize
-	if ~exist('dblJitterSize','var') || isempty(dblJitterSize)
-		dblJitterSize = 2;
-	end
-	
+
 	%% get zeta
 	vecEventStarts1 = matEventTimes1(:,1);
 	vecEventStarts2 = matEventTimes2(:,1);
-	if numel(vecEventStarts1) > 1 && numel(vecSpikeTimes1) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
-	[vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-		calcZetaDiff(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,boolPairedTest,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize);
+	if numel(vecEventStarts1) > 1 && (numel(vecSpikeTimes1)+numel(vecSpikeTimes2)) > 0 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
+		[vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
+			calcZetaTwo(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,dblUseMaxDur,intResampNum,boolDirectQuantile);
 	else
 		intZETALoc = nan;
 	end
@@ -177,15 +164,11 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 		
 		
 		%difference
-		vecMu1 = vecMu_Dur1 - vecMu_Pre1;
-		vecMu2 = vecMu_Dur2 - vecMu_Pre2;
+		vecMu1 = vecMu_Dur1;
+		vecMu2 = vecMu_Dur2;
 		
 		%get metrics
-		if boolPairedTest
-			[h,dblMeanP,ci,stats]=ttest(vecMu1,vecMu2);
-		else
-			[h,dblMeanP,ci,stats]=ttest2(vecMu1,vecMu2);
-		end
+		[h,dblMeanP,ci,stats]=ttest2(vecMu1,vecMu2);
 		dblMeanZ = -norminv(dblMeanP/2);
 	end
 	
@@ -219,7 +202,6 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 			xlabel('Time after event (s)');
 			ylabel('Trial #');
 			title('Raster plot data 1');
-			fixfig;
 			grid off;
 			
 			subplot(2,3,4)
@@ -227,7 +209,6 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 			xlabel('Time after event (s)');
 			ylabel('Trial #');
 			title('Raster plot data 2');
-			fixfig;
 			grid off;
 		end
 		
@@ -235,17 +216,15 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 		plot(vecSpikeT,vecRealFrac1);
 		hold on
 		plot(vecSpikeT,vecRealFrac2);
-		plot(vecSpikeT,vecRealFracLinear,'color',[0.5 0.5 0.5]);
 		title(sprintf('Real data, data 1 - data 2'));
 		xlabel('Time after event (s)');
 		ylabel('Fractional position of spike in trial');
-		fixfig
 		
 		subplot(2,3,3)
 		cla;
 		hold all
 		for intIter=1:intPlotIters
-			plot(vecSpikeT,cellRandDiff{intIter},'Color',[0.5 0.5 0.5]);
+			plot(cellRandT{intIter},cellRandDiff{intIter},'Color',[0.5 0.5 0.5]);
 		end
 		plot(vecSpikeT,vecRealDiff,'Color',lines(1));
 		scatter(dblMaxDTime,vecRealDiff(intZETALoc),'bx');
@@ -264,9 +243,9 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	%% build optional output structure
 	if nargout > 1
 		sZETA = struct;
+		sZETA.dblZetaP = dblZetaP;
 		sZETA.dblZETA = dblZETA;
 		sZETA.dblD = dblD;
-		sZETA.dblP = dblZetaP;
 		sZETA.dblPeakT = dblMaxDTime;
 		sZETA.intPeakIdx = intZETALoc;
 		if boolStopSupplied
@@ -277,6 +256,7 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 		end
 		sZETA.vecSpikeT = vecSpikeT;
 		sZETA.vecD = vecRealDiff;
+		sZETA.cellRandT = cellRandT;
 		sZETA.cellRandDiff = cellRandDiff;
 		
 		sZETA.dblD_InvSign = dblD_InvSign;

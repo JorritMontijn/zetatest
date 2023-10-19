@@ -4,13 +4,6 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 	%[vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
 	%	calcZetaTwo(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,dblUseMaxDur,intResampNum,boolDirectQuantile,boolUseParallel)
 	
-	%%
-	global boolWithReplacement
-	if isempty(boolWithReplacement)
-		boolWithReplacement = false;
-	end
-	boolLocalWithReplacement = boolWithReplacement;
-	
 	%% check inputs and pre-allocate error output
 	vecSpikeT = [];
 	vecRealDiff = [];
@@ -75,13 +68,9 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 			%if cond1 has 10 trials, and cond2 has 100, then:
 			%for shuffle of cond1: take 10 trials from set of 110
 			%for shuffle of cond2: take 100 trials from set of 110
-			if boolLocalWithReplacement
-				vecUseRand1 = randi(intTotT,[1,intT1]);
-				vecUseRand2 = randi(intTotT,[1,intT2]);
-			else
-				vecUseRand1 = randperm(intTotT,intT1);
-				vecUseRand2 = randperm(intTotT,intT2);
-			end
+			vecUseRand1 = randi(intTotT,[1,intT1]);
+			vecUseRand2 = randi(intTotT,[1,intT2]);
+
 			cellTimePerSpike1_Rand = cellAggregateTrials(vecUseRand1);
 			cellTimePerSpike2_Rand = cellAggregateTrials(vecUseRand2);
 			if sum(cellfun(@numel,cellTimePerSpike2_Rand)) == 0 && sum(cellfun(@numel,cellTimePerSpike1_Rand)) == 0
@@ -103,14 +92,8 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 			%if cond1 has 10 trials, and cond2 has 100, then:
 			%for shuffle of cond1: take 10 trials from set of 110
 			%for shuffle of cond2: take 100 trials from set of 110
-			
-			if boolLocalWithReplacement
-				vecUseRand1 = randi(intTotT,[1,intT1]);
-				vecUseRand2 = randi(intTotT,[1,intT2]);
-			else
-				vecUseRand1 = randperm(intTotT,intT1);
-				vecUseRand2 = randperm(intTotT,intT2);
-			end
+			vecUseRand1 = randi(intTotT,[1,intT1]);
+			vecUseRand2 = randi(intTotT,[1,intT2]);
 			
 			cellTimePerSpike1_Rand = cellAggregateTrials(vecUseRand1);
 			cellTimePerSpike2_Rand = cellAggregateTrials(vecUseRand2);
