@@ -18,7 +18,7 @@ function [vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dbl
         if isempty(objPool) || ~isprop(objPool,'NumWorkers') || objPool.NumWorkers < 4
             boolUseParallel = false;
         else
-            boolUseParallel = true;
+            boolUseParallel = false; %seems to always be slower than non-parallel
         end
 	end
 	

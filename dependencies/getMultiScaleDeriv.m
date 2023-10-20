@@ -166,7 +166,7 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 		xlabel('Time after event (s)');
 		ylabel(strLabelY);
 		title(sprintf('Peri Event Plot (PEP)'));
-		fixfig
+		fixfig(vecHandles(1))
 	elseif intPlot > 1
 		vecHandles(1) = subplot(2,3,5);
 		imagesc(matMSD');
@@ -187,7 +187,8 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 		xlabel('Time after event (s)');
 		ylabel(strLabelY);
 		title(sprintf('Peri Event Plot (PEP)'));
-		fixfig
+		fixfig(vecHandles(1));
+		fixfig(vecHandles(2));
 	end
 
 	%% build output
