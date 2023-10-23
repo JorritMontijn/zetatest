@@ -77,7 +77,7 @@ boolStitch = false; %boolean, stitches data in the case of heterogeneous inter-e
 hTic2=tic;
 [dblZetaP,sZETA,sRate,sLatencies] = zetatest(vecSpikeTimes1,matEventTimes,dblUseMaxDur,intResampNum,intPlot,vecRestrictRange,boolDirectQuantile,dblJitterSize,boolStitch);
 dblElapsedTime2=toc(hTic2);
-fprintf("\nSpecified parameters (elapsed time: %.2f s):\nzeta-test p-value: %f\nt-test p-value:%f\n",dblElapsedTime2,dblZetaP,sZETA.dblMeanP)
+fprintf("\nSpecified parameters (elapsed time: %.2f s):\nzeta-test p-value: %f\nt-test p-value: %f\n",dblElapsedTime2,dblZetaP,sZETA.dblMeanP)
 
 % Note on the latencies: while the peaks of ZETA and -ZETA can be useful for diagnostic purposes,
 % they are difficult to interpret, so we suggest sticking to the Onset or Peak time in sLatencies,
@@ -91,7 +91,7 @@ matEventTimesWithPrecedingBaseline = matEventTimes - dblBaselineDuration;
 rng(1,'twister'); %to make the output deterministic
 
 %then run ZETA with the new times
-[dblZetaP_pb,sZETA_pb,sRate_pb,sLatencies_pb] = zetatest(vecSpikeTimes1,matEventTimesWithPrecedingBaseline,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize);
+[dblZetaP_pb,sZETA_pb,sRate_pb,sLatencies_pb] = zetatest(vecSpikeTimes1,matEventTimesWithPrecedingBaseline,dblUseMaxDur,intResampNum,intPlot,vecRestrictRange,boolDirectQuantile,dblJitterSize);
 
 %% however, the zeta function of course won't be able to tell the difference, so all timings are off by 500 ms.
 %here we change the figure labels/titles (you can ignore this bit if you're not using the figure)
@@ -114,8 +114,14 @@ end
 drawnow;
 
 %here we adjust the times in the variables that getZeta returns
-sLatencies_pb = sLatencies_pb - dblBaselineDuration;
+sLatencies_pb.Onset = sLatencies_pb.Onset - dblBaselineDuration;
+sLatencies_pb.Peak = sLatencies_pb.Peak - dblBaselineDuration;
+sLatencies_pb.ZETA = sLatencies_pb.ZETA - dblBaselineDuration;
+sLatencies_pb.ZETA_InvSign = sLatencies_pb.ZETA_InvSign - dblBaselineDuration;
 sZETA_pb.vecSpikeT = sZETA_pb.vecSpikeT - dblBaselineDuration;
+sZETA_pb.vecLatencies = sZETA_pb.vecLatencies - dblBaselineDuration;
+sZETA_pb.dblZetaT = sZETA_pb.dblZetaT - dblBaselineDuration;
+sZETA_pb.dblZetaT_InvSign = sZETA_pb.dblZetaT_InvSign - dblBaselineDuration;
 sRate_pb.vecT = sRate_pb.vecT - dblBaselineDuration;
 sRate_pb.dblPeakTime = sRate_pb.dblPeakTime - dblBaselineDuration;
 sRate_pb.dblOnset = sRate_pb.dblOnset - dblBaselineDuration;

@@ -1,6 +1,6 @@
-function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur,boolUseParallel)
+function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,dblBase,dblMeanRate,dblUseMaxDur,boolUseParallel)
 	%getMultiScaleDeriv Returns multi-scale derivative. Syntax:
-	%   [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur,boolUseParallel)
+	%   [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,dblBase,dblMeanRate,dblUseMaxDur,boolUseParallel)
 	%Required input:
 	%	- vecT [N x 1]: timestamps (e.g., spike times)
 	%	- vecV [N x 1]: values (e.g., z-scores)
@@ -9,8 +9,6 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 	%	- dblSmoothSd: Gaussian SD of smoothing kernel (in # of samples) [default: 2]
 	%	- dblMinScale: minimum derivative scale in seconds [default: 1/1000]
 	%	- dblBase: base for exponential scale step size [default: 1.5]
-	%	- intPlot: integer, plotting switch (0=none, 1=plot rates, 2=subplot 5&6 of [2 3]) [default: 0].
-	%						If set to 1, it will plot into the current axes if empty, or create a new figure if ~isempty(get(gca,'Children'))
 	%	- dblMeanRate: mean spiking rate to normalize vecRate (optional)
 	%	- dblUseMaxDur: trial duration to normalize vecRate (optional)
 	%	- boolUseParallel: use parallel processing (optional) [default: true if pool is active, otherwise false; can decrease performance, so be cautious!]
@@ -58,14 +56,8 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 	if ~exist('dblMinScale','var') || isempty(dblMinScale)
 		dblMinScale = round(log(1/1000) / log(dblBase));
 	end
-	if ~exist('intPlot','var') || isempty(intPlot)
-		intPlot = 0;
-	end
 	if ~exist('dblMeanRate','var') || isempty(dblMeanRate)
 		dblMeanRate = 1;
-		strLabelY = 'Time-locked activation (a.u.)';
-	else
-		strLabelY = 'Spiking rate (Hz)';
 	end
 	if ~exist('dblUseMaxDur','var') || isempty(dblUseMaxDur)
 		dblUseMaxDur = range(vecT);
@@ -124,8 +116,6 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 		end
 	end
 
-
-
 	%% smoothing
 	if dblSmoothSd > 0
 		vecFilt = normpdf(-2*ceil(dblSmoothSd):2*ceil(dblSmoothSd),0,dblSmoothSd)';
@@ -139,12 +129,6 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 		catch
 			matMSD = conv2(matMSD,vecFilt,'valid');
 		end
-
-		%title
-		strTitle = 'Smoothed MSDs';
-	else
-		%title
-		strTitle = 'MSDs';
 	end
 	%mean
 	vecM = mean(gather(matMSD),2);
@@ -155,42 +139,6 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 	%rescale to real firing rates
 	vecRate = dblMeanRate * ((vecM + 1/dblUseMaxDur)/(dblMeanM + 1/dblUseMaxDur));
 
-	%% plot
-    vecHandles = [];
-	if intPlot == 1
-		if ~isempty(get(gca,'Children'))
-			figure;
-        end
-        vecHandles(1) = gca;
-		stairs(vecT,vecRate)
-		xlabel('Time after event (s)');
-		ylabel(strLabelY);
-		title(sprintf('Peri Event Plot (PEP)'));
-		fixfig(vecHandles(1))
-	elseif intPlot > 1
-		vecHandles(1) = subplot(2,3,5);
-		imagesc(matMSD');
-		set(gca,'ytick',[]);
-		ylabel(sprintf('Scale (s) (%.1es - %.1es)',vecScale(1),vecScale(end)));
-		xlabel('Timestamp index (#)');
-		title(strTitle);
-		fixfig
-		grid off
-
-		vecHandles(2) = subplot(2,3,6);
-		if numel(vecT) > 10000
-			vecSubset = round(linspace(1,numel(vecT),10000));
-			plot(vecT(vecSubset),vecRate(vecSubset));
-		else
-			plot(vecT,vecRate);
-		end
-		xlabel('Time after event (s)');
-		ylabel(strLabelY);
-		title(sprintf('Peri Event Plot (PEP)'));
-		fixfig(vecHandles(1));
-		fixfig(vecHandles(2));
-	end
-
 	%% build output
 	if nargout > 1
 		sMSD = struct;
@@ -200,7 +148,6 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 		sMSD.vecScale = vecScale;
 		sMSD.matMSD = matMSD;
 		sMSD.vecV = vecV;
-        sMSD.vecHandles = vecHandles;
 	end
 end
 function vecMSD = calcSingleMSD(dblScale,vecT,vecV)
