@@ -24,8 +24,8 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	%		- dblZetaP: same as first output
 	%		- dblZETA; deviation z-score (i.e., >2 is significant)
 	%		- dblD; temporal deviation value underlying ZETA
-	%		- dblPeakT; time corresponding to ZETA
-	%		- intPeakIdx; entry corresponding to ZETA
+	%		- dblZetaT; time corresponding to ZETA
+	%		- intZetaIdx; entry corresponding to ZETA
 	%		- dblMeanZ; z-score based on mean-rate stim/base difference (compare with ZETA)
 	%		- dblMeanP; p-value based on mean-rate stim/base difference (compare with ZetaP)
 	%		- vecMu1; average spiking rate values per event underlying t-test for condition 1
@@ -106,19 +106,19 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	vecEventStarts1 = matEventTimes1(:,1);
 	vecEventStarts2 = matEventTimes2(:,1);
 	if numel(vecEventStarts1) > 1 && numel(vecTime1) > 1 && numel(vecEventStarts2) > 1 && numel(vecTime2) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
-		[vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dblZETA,intZETALoc,matTracePerTrial1,matTracePerTrial2] = ...
+		[vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dblZETA,intZetaIdx,matTracePerTrial1,matTracePerTrial2] = ...
 			calcTsZetaTwo(vecTime1,vecValue1,vecEventStarts1,vecTime2,vecValue2,vecEventStarts2,dblSuperResFactor,dblUseMaxDur,intResampNum,boolDirectQuantile);
 	else
-		intZETALoc = nan;
+		intZetaIdx = nan;
 	end
 	
 	%get location
-	dblMaxDTime = vecRefT(intZETALoc);
-	dblD = vecRealDiff(intZETALoc);
+	dblZetaT = vecRefT(intZetaIdx);
+	dblD = vecRealDiff(intZetaIdx);
 	
 	%% build placeholder outputs
 	sZETA = [];
-	if isnan(intZETALoc)
+	if isnan(intZetaIdx)
 		dblZetaP = 1;
 		dblZETA = 0;
 		warning([mfilename ':InsufficientSamples'],'Insufficient samples to calculate zeta');
@@ -285,8 +285,8 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		sZETA.dblZetaP = dblZetaP;
 		sZETA.dblZETA = dblZETA;
 		sZETA.dblD = dblD;
-		sZETA.dblPeakT = dblMaxDTime;
-		sZETA.intPeakIdx = intZETALoc;
+		sZETA.dblZetaT = dblZetaT;
+		sZETA.intZetaIdx = intZetaIdx;
 		if boolStopSupplied
 			sZETA.dblMeanZ = dblMeanZ;
 			sZETA.dblMeanP = dblMeanP;

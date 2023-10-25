@@ -3,10 +3,10 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	%syntax: [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTimes2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile)
 	%
 	%required inputs:
-	%	- vecSpikeTimes1 [S x 1]: spike times (in seconds) for neuron 1
-	%	- vecEventTimes1 [T x 1]: event on times (s) for neuron 1, or [T x 2] including event off times
-	%	- vecSpikeTimes2 [S x 1]: spike times (in seconds) for neuron 2
-	%	- vecEventTimes2 [T x 1]: event on times (s) for neuron 2, or [T x 2] including event off times
+	%	- vecSpikeTimes1 [S x 1]: spike times (in seconds) for condition 1
+	%	- vecEventTimes1 [T x 1]: event on times (s) for condition 1, or [T x 2] including event off times
+	%	- vecSpikeTimes2 [S x 1]: spike times (in seconds) for condition 2
+	%	- vecEventTimes2 [T x 1]: event on times (s) for condition 2, or [T x 2] including event off times
 	%optional inputs:
 	%	- dblUseMaxDur: float (s), window length for calculating ZETA: ignore all spikes beyond this duration after event onset
 	%								(default: minimum of all event onsets to next event onset)
@@ -22,19 +22,19 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	%		- dblZETA; responsiveness z-score (i.e., >2 is significant)
 	%		- dblD; temporal deviation value underlying ZETA
 	%		- dblP; p-value corresponding to ZETA
-	%		- dblPeakT; time corresponding to ZETA
-	%		- intPeakIdx; entry corresponding to ZETA
+	%		- dblZetaT; time corresponding to ZETA
+	%		- intZetaIdx; entry corresponding to ZETA
 	%		- dblMeanZ; z-score based on mean-rate stim/base difference
 	%		- dblMeanP; p-value based on mean-rate stim/base difference
 	%		- vecMu1; average spiking rate values per event underlying t-test for condition 1
 	%		- vecMu2; average spiking rate values per event underlying t-test for condition 2
 	%		- vecSpikeT: timestamps of spike times (corresponding to vecD)
 	%		- vecD; temporal deviation vector of data
-	%		- cellRandDiff; timestamps for null-hypothesis resampled data
+	%		- cellRandT; timestamps for null-hypothesis resampled data
 	%		- cellRandDiff; null-hypothesis temporal deviation vectors of resampled data
 	%		- dblD_InvSign; largest peak of inverse sign to ZETA (i.e., -ZETA)
-	%		- dblPeakT_InvSign; time corresponding to -ZETA
-	%		- intPeakIdx_InvSign; entry corresponding to -ZETA
+	%		- dblZetaT_InvSign; time corresponding to -ZETA
+	%		- intZetaIdx_InvSign; entry corresponding to -ZETA
 	%		- dblUseMaxDur; window length used to calculate ZETA
 	%
 	%v1.0 - rev20231019
@@ -95,15 +95,15 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	vecEventStarts1 = matEventTimes1(:,1);
 	vecEventStarts2 = matEventTimes2(:,1);
 	if numel(vecEventStarts1) > 1 && (numel(vecSpikeTimes1)+numel(vecSpikeTimes2)) > 0 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
-		[vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
+		[vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZetaIdx] = ...
 			calcZetaTwo(vecSpikeTimes1,vecEventStarts1,vecSpikeTimes2,vecEventStarts2,dblUseMaxDur,intResampNum,boolDirectQuantile);
 	else
-		intZETALoc = nan;
+		intZetaIdx = nan;
 	end
 	
 	%% build placeholder outputs
 	sZETA = [];
-	if isnan(intZETALoc)
+	if isnan(intZetaIdx)
 		dblZetaP = 1;
 		dblZETA = 0;
 		warning([mfilename ':InsufficientSamples'],'Insufficient samples to calculate zeta');
@@ -132,40 +132,27 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	
 	%% extract real outputs
 	%get location
-	dblMaxDTime = vecSpikeT(intZETALoc);
-	dblD = vecRealDiff(intZETALoc);
+	dblZetaT = vecSpikeT(intZetaIdx);
+	dblD = vecRealDiff(intZetaIdx);
 	
 	%find peak of inverse sign
-	[dummy,intPeakLocInvSign] = max(-sign(dblD)*vecRealDiff);
-	dblMaxDTimeInvSign = vecSpikeT(intPeakLocInvSign);
-	dblD_InvSign = vecRealDiff(intPeakLocInvSign);
+	[dummy,intZetaIdx_InvSign] = max(-sign(dblD)*vecRealDiff);
+	dblZetaT_InvSign = vecSpikeT(intZetaIdx_InvSign);
+	dblD_InvSign = vecRealDiff(intZetaIdx_InvSign);
 	
 	%% calculate mean-rate difference with t-test
 	if boolStopSupplied && (nargout > 1 || intPlot > 1)
-		%neuron 1
+		%condition 1
 		vecRespBinsDur = sort(flat([matEventTimes1(:,1) matEventTimes1(:,2)]));
 		vecR = histcounts(vecSpikeTimes1,vecRespBinsDur);
 		vecD = diff(vecRespBinsDur)';
-		vecMu_Dur1 = vecR(1:2:end)./vecD(1:2:end);
-		dblStart1 = min(vecRespBinsDur);
-		dblFirstPreDur = dblStart1 - max([0 dblStart1 - median(vecD(2:2:end))]);
-		dblR11 = sum(vecSpikeTimes1 > (dblStart1 - dblFirstPreDur) & vecSpikeTimes1 < dblStart1);
-		vecMu_Pre1 = [dblR11 vecR(2:2:end)]./[dblFirstPreDur vecD(2:2:end)];
-		
-		%neuron 2
+		vecMu1 = vecR(1:2:end)./vecD(1:2:end);
+
+		%condition 2
 		vecRespBinsDur = sort(flat([matEventTimes2(:,1) matEventTimes2(:,2)]));
 		vecR = histcounts(vecSpikeTimes2,vecRespBinsDur);
 		vecD = diff(vecRespBinsDur)';
-		vecMu_Dur2 = vecR(1:2:end)./vecD(1:2:end);
-		dblStart2 = min(vecRespBinsDur);
-		dblFirstPreDur = dblStart2 - max([0 dblStart2 - median(vecD(2:2:end))]);
-		dblR12 = sum(vecSpikeTimes2 > (dblStart2 - dblFirstPreDur) & vecSpikeTimes2 < dblStart2);
-		vecMu_Pre2 = [dblR12 vecR(2:2:end)]./[dblFirstPreDur vecD(2:2:end)];
-		
-		
-		%difference
-		vecMu1 = vecMu_Dur1;
-		vecMu2 = vecMu_Dur2;
+		vecMu2 = vecR(1:2:end)./vecD(1:2:end);
 		
 		%get metrics
 		[h,dblMeanP,ci,stats]=ttest2(vecMu1,vecMu2);
@@ -227,8 +214,8 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 			plot(cellRandT{intIter},cellRandDiff{intIter},'Color',[0.5 0.5 0.5]);
 		end
 		plot(vecSpikeT,vecRealDiff,'Color',lines(1));
-		scatter(dblMaxDTime,vecRealDiff(intZETALoc),'bx');
-		scatter(dblMaxDTimeInvSign,vecRealDiff(intPeakLocInvSign),'b*');
+		scatter(dblZetaT,vecRealDiff(intZetaIdx),'bx');
+		scatter(dblZetaT_InvSign,vecRealDiff(intZetaIdx_InvSign),'b*');
 		hold off
 		xlabel('Time after event (s)');
 		ylabel('Deviation difference (\deltas)');
@@ -246,8 +233,8 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 		sZETA.dblZetaP = dblZetaP;
 		sZETA.dblZETA = dblZETA;
 		sZETA.dblD = dblD;
-		sZETA.dblPeakT = dblMaxDTime;
-		sZETA.intPeakIdx = intZETALoc;
+		sZETA.dblZetaT = dblZetaT;
+		sZETA.intZetaIdx = intZetaIdx;
 		if boolStopSupplied
 			sZETA.dblMeanZ = dblMeanZ;
 			sZETA.dblMeanP = dblMeanP;
@@ -260,8 +247,8 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 		sZETA.cellRandDiff = cellRandDiff;
 		
 		sZETA.dblD_InvSign = dblD_InvSign;
-		sZETA.dblPeakT_InvSign = dblMaxDTimeInvSign;
-		sZETA.intPeakIdx_InvSign = intPeakLocInvSign;
+		sZETA.dblZetaT_InvSign = dblZetaT_InvSign;
+		sZETA.intZetaIdx_InvSign = intZetaIdx_InvSign;
 		sZETA.dblUseMaxDur = dblUseMaxDur;
 	end
 end
