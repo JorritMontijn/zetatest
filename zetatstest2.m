@@ -30,7 +30,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	%		- dblMeanP; p-value based on mean-rate stim/base difference (compare with ZetaP)
 	%		- vecMu1; average spiking rate values per event underlying t-test for condition 1
 	%		- vecMu2; average spiking rate values per event underlying t-test for condition 2
-	%		- vecRefT: timestamps of trace entries (corresponding to vecZ)
+	%		- vecRefT: timestamps of trace entries (corresponding to vecRealDiff)
 	%		- vecRealDiff; real difference in cumulative density of spikes between condition 1&2
 	%		- matRandDiff; random differences in cumulative density of spikes
 	%
@@ -161,7 +161,6 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 				vecThisTraceT = vecTime2;
 				vecThisTraceAct = vecValue2;
 			end
-			dblMedianBaseDur = median(vecEventStarts(2:end) - vecEventStops(1:(end-1)));
 			intTimeNum = numel(vecThisTraceT);
 			intMaxRep = numel(vecEventStarts);
 			vecBaseAct = nan(1,intMaxRep);

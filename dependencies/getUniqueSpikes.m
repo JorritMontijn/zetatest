@@ -1,6 +1,6 @@
 function vecUniqueSpikeTimes = getUniqueSpikes(vecSpikeTimes)
-	[vecUniqueSpikeTimes,ia,ic] = unique(vecSpikeTimes);
 	%introduce minimum jitter to identical spikes
+	[vecUniqueSpikeTimes,ia,ic] = unique(vecSpikeTimes);
 	vecNotUnique = vecSpikeTimes(ia(diff(ia)>1));
 	if ~isempty(vecNotUnique)
 		dblUniqueOffset = max(eps(vecSpikeTimes));
