@@ -1,8 +1,8 @@
 function [vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dblZETA,intZETALoc,matTracePerTrial1,matTracePerTrial2] = ...
-		calcTsZetaTwo(vecTraceT1,vecTraceAct1,vecEventStarts1,vecTraceT2,vecTraceAct2,vecEventStarts2,dblSuperResFactor,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolUseParallel)
+		calcTsZetaTwo(vecTraceT1,vecTraceAct1,vecEventStarts1,vecTraceT2,vecTraceAct2,vecEventStarts2,dblSuperResFactor,dblUseMaxDur,intResampNum,boolDirectQuantile,boolUseParallel)
 	%calcTsZetaTwo Calculates neuronal responsiveness index zeta
 	%[vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-	%	calcTsZetaTwo(vecTraceT1,vecTraceAct1,vecEventStarts1,vecTraceT2,vecTraceAct2,vecEventStarts2,dblSuperResFactor,dblUseMaxDur,intResampNum,boolDirectQuantile,dblJitterSize,boolUseParallel)
+	%	calcTsZetaTwo(vecTraceT1,vecTraceAct1,vecEventStarts1,vecTraceT2,vecTraceAct2,vecEventStarts2,dblSuperResFactor,dblUseMaxDur,intResampNum,boolDirectQuantile,boolUseParallel)
 	
     %% check inputs and pre-allocate error output
 	vecRefT = [];
