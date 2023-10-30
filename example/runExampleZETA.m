@@ -68,20 +68,20 @@ rng(1,'twister'); %to make the output deterministic
 dblUseMaxDur = min(diff(vecStimulusStartTimes)); %minimum of trial-to-trial durations
 intResampNum = 50; %~50 random resamplings should give us a good enough idea if this cell is responsive, but if it's close to 0.05, we should increase this #. Generally speaking, more is better, so let's put 100 here.
 intPlot = 3;%what do we want to plot?(0=nothing, 1=inst. rate only, 2=traces only, 3=raster plot as well, 4=adds latencies in raster plot)
-intLatencyPeaks = 4; %how many latencies do we want? 1=ZETA, 2=-ZETA, 3=peak, 4=first crossing of peak half-height
 vecRestrictRange = [0 inf];%do we want to restrict the peak detection to for example the time during stimulus? Then put [0 1] here.
 boolDirectQuantile = false;%if true; uses the empirical null distribution rather than the Gumbel approximation. Note that in this case the accuracy of your p-value is limited by the # of resamplings
 dblJitterSize = 1; %scalar value, sets the temporal jitter window relative to dblUseMaxDur (default: 2). Note that a value of "2" therefore means that the last data point that can be used is at t=last_onset + dblUseMaxDur*3
+boolStitch = false; %boolean, stitches data in the case of heterogeneous inter-event durations (default: true)
 
 %then run ZETA with those parameters
 hTic2=tic;
-[dblZetaP,sZETA,sRate,vecLatencies] = zetatest(vecSpikeTimes1,matEventTimes,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize);
+[dblZetaP,sZETA,sRate,sLatencies] = zetatest(vecSpikeTimes1,matEventTimes,dblUseMaxDur,intResampNum,intPlot,vecRestrictRange,boolDirectQuantile,dblJitterSize,boolStitch);
 dblElapsedTime2=toc(hTic2);
-fprintf("\nSpecified parameters (elapsed time: %.2f s):\nzeta-test p-value: %f\nt-test p-value:%f\n",dblElapsedTime2,dblZetaP,sZETA.dblMeanP)
+fprintf("\nSpecified parameters (elapsed time: %.2f s):\nzeta-test p-value: %f\nt-test p-value: %f\n",dblElapsedTime2,dblZetaP,sZETA.dblMeanP)
 
 % Note on the latencies: while the peaks of ZETA and -ZETA can be useful for diagnostic purposes,
-% they are difficult to interpret, so we suggest sticking to the peak time (vecLatencies[2]),
-% which is more easily interpretable. Please read the paper for more information.
+% they are difficult to interpret, so we suggest sticking to the Onset or Peak time in sLatencies,
+% which are more easily interpretable. Please read the paper for more information.
 
 %% by popular demand: using a baseline that precedes the onset
 %putting the baseline before the stimulus can be done by simply subtracting
@@ -91,7 +91,7 @@ matEventTimesWithPrecedingBaseline = matEventTimes - dblBaselineDuration;
 rng(1,'twister'); %to make the output deterministic
 
 %then run ZETA with the new times
-[dblZetaP_pb,sZETA_pb,sRate_pb,vecLatencies_pb] = zetatest(vecSpikeTimes1,matEventTimesWithPrecedingBaseline,dblUseMaxDur,intResampNum,intPlot,intLatencyPeaks,vecRestrictRange,boolDirectQuantile,dblJitterSize);
+[dblZetaP_pb,sZETA_pb,sRate_pb,sLatencies_pb] = zetatest(vecSpikeTimes1,matEventTimesWithPrecedingBaseline,dblUseMaxDur,intResampNum,intPlot,vecRestrictRange,boolDirectQuantile,dblJitterSize);
 
 %% however, the zeta function of course won't be able to tell the difference, so all timings are off by 500 ms.
 %here we change the figure labels/titles (you can ignore this bit if you're not using the figure)
@@ -114,27 +114,33 @@ end
 drawnow;
 
 %here we adjust the times in the variables that getZeta returns
-vecLatencies_pb = vecLatencies_pb - dblBaselineDuration;
+sLatencies_pb.Onset = sLatencies_pb.Onset - dblBaselineDuration;
+sLatencies_pb.Peak = sLatencies_pb.Peak - dblBaselineDuration;
+sLatencies_pb.ZETA = sLatencies_pb.ZETA - dblBaselineDuration;
+sLatencies_pb.ZETA_InvSign = sLatencies_pb.ZETA_InvSign - dblBaselineDuration;
 sZETA_pb.vecSpikeT = sZETA_pb.vecSpikeT - dblBaselineDuration;
+sZETA_pb.vecLatencies = sZETA_pb.vecLatencies - dblBaselineDuration;
+sZETA_pb.dblZetaT = sZETA_pb.dblZetaT - dblBaselineDuration;
+sZETA_pb.dblZetaT_InvSign = sZETA_pb.dblZetaT_InvSign - dblBaselineDuration;
 sRate_pb.vecT = sRate_pb.vecT - dblBaselineDuration;
 sRate_pb.dblPeakTime = sRate_pb.dblPeakTime - dblBaselineDuration;
 sRate_pb.dblOnset = sRate_pb.dblOnset - dblBaselineDuration;
 
 %% run the time-series ZETA-test
 % take subselection of data
-intUseTrialNum = 480;
+intUseTrialNum = 960;
 vecStimulusStartTimesTs = vecStimulusStartTimes(1:intUseTrialNum);
 vecStimulusStopTimesTs = vecStimulusStopTimes(1:intUseTrialNum);
 matEventTimesTs = cat(2,vecStimulusStartTimesTs,vecStimulusStopTimesTs);
 
 % first transform the data to time-series
-fprintf('\nRunning time-series zeta-test; This will take a couple of seconds\n')
+fprintf('\nRunning time-series zeta-test; This will take about a minute\n')
 dblStartT = 0;
 dblEndT = vecStimulusStopTimesTs(end) + dblUseMaxDur*5;
 dblSamplingRate = 50.0; % simulate acquisition rate
 dblSampleDur = 1/dblSamplingRate;
 vecTimestamps = dblStartT:dblSampleDur:dblEndT+dblSampleDur;
-vecSpikesBinned = histcounts(vecSpikeTimes1, vecTimestamps);
+vecSpikesBinned1 = histcounts(vecSpikeTimes1, vecTimestamps);
 vecTimestamps = vecTimestamps(1:(end-1));
 dblSmoothSd = 1;
 intSmoothRange = 2*ceil(dblSmoothSd);
@@ -143,17 +149,17 @@ vecFilt = vecFilt / sum(vecFilt);
 
 % pad array
 intPadSize = floor(numel(vecFilt)/2);
-vecData = padarray(vecSpikesBinned, [0 intPadSize],'replicate');
+vecData1 = padarray(vecSpikesBinned1, [0 intPadSize],'replicate');
 
 % filter
-vecData = conv(vecData, vecFilt, 'valid');
+vecData1 = conv(vecData1, vecFilt, 'valid');
 
 %set random seed
 rng(1,'twister');
 
 % time-series zeta-test with default parameters
 hTic3 = tic;
-dblTsZetaP = zetatstest(vecTimestamps, vecData, vecStimulusStartTimesTs);
+dblTsZetaP = zetatstest(vecTimestamps, vecData1, vecStimulusStartTimesTs);
 dblElapsedTime3=toc(hTic3);
 fprintf("\nDefault parameters (elapsed time: %.2f s):\ntime-series zeta-test p-value: %f\n",dblElapsedTime3,dblTsZetaP)
 
@@ -164,27 +170,58 @@ fprintf('\nRunning time-series zeta-test with specified parameters; This will ta
 
 % run test
 hTic4 = tic;
-[dblTsZetaP2, sZetaTs] = zetatstest(vecTimestamps, vecData, matEventTimesTs,dblUseMaxDur, intResampNum, intPlot, boolDirectQuantile, dblJitterSize);
+[dblTsZetaP2, sZetaTs] = zetatstest(vecTimestamps, vecData1, matEventTimesTs,dblUseMaxDur, intResampNum, intPlot, boolDirectQuantile, dblJitterSize);
 dblElapsedTime4 = toc(hTic4);
 fprintf("\nSpecified parameters (elapsed time: %.2f s):\ntime-series zeta-test p-value: %f\nt-test p-value: %f\n",dblElapsedTime4,dblTsZetaP,sZetaTs.dblMeanP)
 
-return
-%% finally, run the two-sample ZETA-test
-% NOTE: THIS IS STILL UNDER DEVELOPMENT! USE AT YOUR OWN RISK
+%% run the two-sample ZETA-test
 %case 1: are neurons 1 & 2 responding differently to a set of visual stimuli?
-%in this example, we are testing two simultaneously recorded neurons, so we can use the paired
-%version of the test (see note after typing "help zetatest2"). However, since these neurons are not
-%very noisy, paired testing should have little effect on the statistical significance.
+rng(1,'twister');
+fprintf('\nRunning two-sample zeta-test on two neurons, same stimuli\n')
+hTic5 = tic;
+intTrials = 240; %that's already more than enough
 intResampNum = 500; %the two-sample test is more variable, as it depends on differences, so it requires more resamplings
-boolPairedTest = true;
-[dblZetaPaired,sZETA2] = zetatest2(vecSpikeTimes1,matEventTimes,vecSpikeTimes2,matEventTimes,boolPairedTest,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize);
+[dblZetaTwoSample,sZETA2] = zetatest2(vecSpikeTimes1,matEventTimes(1:intTrials,:),vecSpikeTimes2,matEventTimes(1:intTrials,:),dblUseMaxDur,intResampNum,intPlot);
+dblElapsedTime5 = toc(hTic5);
+fprintf("\nAre two neurons responding differently? (elapsed time: %.2f s)\nzeta-test p-value: %.2e\nt-test p-value: %.2e\n",dblElapsedTime5,dblZetaTwoSample,sZETA2.dblMeanP)
 
-%case 2a: is neuron 1 responding differently to gratings oriented at 30 and 60 degrees?
-intPlot = 3;
-boolPairedTest = false;
-vecTrials1 = sStim.Orientation==30;
-vecTrials2 = sStim.Orientation==60;
-dblZetaUnpaired1 = zetatest2(vecSpikeTimes1,matEventTimes(vecTrials1,:),vecSpikeTimes1,matEventTimes(vecTrials2,:),boolPairedTest,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize);
+% case 2a: is neuron 1 responding differently to gratings oriented at 0 and 90 degrees?
+vecTrials1 = sStim.Orientation==0;
+vecTrials2 = sStim.Orientation==90;
+fprintf('\nRunning two-sample zeta-test on one neuron, different stimuli\n')
+hTic6 = tic;
+[dblZetaTwoSample2a,sZETA2a] = zetatest2(vecSpikeTimes1,matEventTimes(vecTrials1,:),vecSpikeTimes1,matEventTimes(vecTrials2,:),dblUseMaxDur,intResampNum,intPlot);
+dblElapsedTime6 = toc(hTic6);
+fprintf("\nIs neuron 1 responding differently to 0 and 90 degree stimuli? (elapsed time: %.2f s)\nzeta-test p-value: %f\nt-test p-value: %f\n",dblElapsedTime6,dblZetaTwoSample2a,sZETA2a.dblMeanP)
 
 %case 2b: is neuron 2 responding differently to gratings oriented at 30 and 60 degrees?
-dblZetaUnpaired2 = zetatest2(vecSpikeTimes2,matEventTimes(vecTrials1,:),vecSpikeTimes2,matEventTimes(vecTrials2,:),boolPairedTest,dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblJitterSize);
+hTic7 = tic;
+[dblZetaTwoSample2b,sZETA2b] = zetatest2(vecSpikeTimes2,matEventTimes(vecTrials1,:),vecSpikeTimes2,matEventTimes(vecTrials2,:),dblUseMaxDur,intResampNum,intPlot);
+dblElapsedTime7 = toc(hTic7);
+fprintf("\nIs neuron 2 responding differently to 0 and 90 degree stimuli? (elapsed time: %.2f s)\nzeta-test p-value: %f\nt-test p-value: %f\n",dblElapsedTime7,dblZetaTwoSample2b,sZETA2b.dblMeanP)
+
+%% finally, the two-sample time-series ZETA test
+%get trials
+indUseTrialsTs = ismember(1:numel(sStim.Orientation),1:intUseTrialNum);
+vecTrials1 = sStim.Orientation==0&indUseTrialsTs;
+vecTrials2 = sStim.Orientation==90&indUseTrialsTs;
+
+%get data for neuron 2
+vecTimestamps = dblStartT:dblSampleDur:dblEndT+dblSampleDur;
+vecData2 = conv(padarray(histcounts(vecSpikeTimes2, vecTimestamps), [0 intPadSize],'replicate'), vecFilt, 'valid');
+vecTimestamps = vecTimestamps(1:(end-1));
+
+%case 1: are neurons 1 & 2 responding differently to a set of visual stimuli?
+rng(1,'twister');
+fprintf('\nRunning two-sample time-series zeta-test on two neurons, same stimuli\n')
+hTic8 = tic;
+[dblTsZetaTwoSample,sTSZETA] = zetatstest2(vecTimestamps,vecData1,matEventTimesTs(indUseTrialsTs,:),vecTimestamps,vecData2,matEventTimesTs(indUseTrialsTs,:),dblUseMaxDur,intResampNum,intPlot);
+dblElapsedTime8 = toc(hTic8);
+fprintf("\nAre two neurons responding differently? (elapsed time: %.2f s)\nzeta-test p-value: %.2e\nt-test p-value: %.2e\n",dblElapsedTime8,dblTsZetaTwoSample,sTSZETA.dblMeanP)
+
+%case 2: is neuron 1 responding differently to gratings oriented at 0 and 90 degrees?
+fprintf('\nRunning two-sample time-series zeta-test on one neuron, different stimuli\n')
+hTic9 = tic;
+[dblTsZetaTwoSample2,sTSZETA2] = zetatstest2(vecTimestamps,vecData1,matEventTimesTs(vecTrials1,:),vecTimestamps,vecData1,matEventTimesTs(vecTrials2,:),dblUseMaxDur,intResampNum,intPlot);
+dblElapsedTime9 = toc(hTic9);
+fprintf("\nIs neuron 1 responding differently to 0 and 90 degree stimuli? (elapsed time: %.2f s)\nzeta-test p-value: %f\nt-test p-value: %f\n",dblElapsedTime9,dblTsZetaTwoSample2,sTSZETA2.dblMeanP)

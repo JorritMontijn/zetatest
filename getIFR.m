@@ -1,6 +1,6 @@
-function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intSmoothSd,dblMinScale,dblBase,intPlot,boolUseParallel)
+function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intSmoothSd,dblMinScale,dblBase,boolUseParallel)
 	%getIFR Returns instaneous firing rate. Syntax:
-	%   [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intSmoothSd,dblMinScale,dblBase,intPlot,boolUseParallel)
+	%   [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxDur,intSmoothSd,dblMinScale,dblBase,boolUseParallel)
 	%Required input:
 	%	- vecSpikeTimes [S x 1]: spike times (s)
 	%	- vecEventStarts [T x 1]: event on times (s), or [T x 2] including event off times
@@ -11,7 +11,6 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	%	- intSmoothSd: Gaussian SD of smoothing kernel (in # of bins) [default: 2]
 	%	- dblMinScale: minimum derivative scale in log-seconds [default: round(log(1/1000) / log(dblBase))]
 	%	- dblBase: critical value for locally dynamic derivative [default: 1.5]
-	%	- intPlot: integer, plotting switch (0=none, 1=plot)
 	%
 	%Outputs:
 	%	- vecTime; Time points corresponding to rates in vecRate
@@ -22,7 +21,7 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	%		- vecDiff;
 	%		- vecScale; 
 	%
-	%v1.7 - 22 August 2023
+	%v1.8 - 23 October 2023
 	
 	%Version history:
 	%1.0 - 24 January 2019
@@ -41,6 +40,8 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	%	Fixed mismatch of vecTime/vecRate after last update [by JM]
 	%1.7 - 22 August 2023
 	%	Changed default dblUseMaxDur to min instead of median ITI to match zetatest default  [by JM]
+	%1.8 - 23 October 2023
+	%	Removed plotting [by JM]
 	
 	%% set default values
 	if ~exist('intSmoothSd','var') || isempty(intSmoothSd)
@@ -54,9 +55,6 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	end
 	if ~exist('dblUseMaxDur','var') || isempty(dblUseMaxDur)
 		dblUseMaxDur = min(diff(vecEventStarts(:,1)));
-	end
-	if ~exist('intPlot','var') || isempty(intPlot)
-		intPlot = 1;
 	end
 	if ~exist('boolUseParallel','var') || isempty(boolUseParallel)
 		objPool = gcp('nocreate');
@@ -90,7 +88,7 @@ function [vecTime,vecRate,sIFR] = getIFR(vecSpikeTimes,vecEventStarts,dblUseMaxD
 	%% get multi-scale derivative
 	intMaxRep = size(vecEventStarts,1);
 	dblMeanRate = (intSpikes/(dblUseMaxDur*intMaxRep));
-	[vecRate,sMSD] = getMultiScaleDeriv(vecTime,vecRealDiff,intSmoothSd,dblMinScale,dblBase,intPlot,dblMeanRate,dblUseMaxDur,boolUseParallel);
+	[vecRate,sMSD] = getMultiScaleDeriv(vecTime,vecRealDiff,intSmoothSd,dblMinScale,dblBase,dblMeanRate,dblUseMaxDur,boolUseParallel);
 	vecTime = sMSD.vecT;
 	
 	%% build output

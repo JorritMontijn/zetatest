@@ -1,17 +1,17 @@
 	function [vecThisDiff,vecThisFrac,vecThisFracLinear,vecRefT] = ...
-			getTraceOffsetOne(vecTimestamps,vecData,vecEventStartT,dblUseMaxDur)
+			getTraceOffsetOne(vecTimestamps,vecData,vecEventStartT,dblUseMaxDur,dblSuperResFactor)
 	%getTraceOffsetOne Calculate temporal offset vectors. Syntax:
 	%[vecThisDiff,vecThisFrac,vecThisFracLinear,vecRefT] = ...
-	%	getTraceOffsetOne(vecTimestamps,vecData,vecEventStartT,vecRefT,dblUseMaxDur)
+	%	getTraceOffsetOne(vecTimestamps,vecData,vecEventStartT,dblUseMaxDur,dblSuperResFactor)
 	%
 	%This is a subfunction for getZeta().
 	
 	%% prepare
-	vecRefT = getTsRefT(vecTimestamps,vecEventStartT,dblUseMaxDur);
+	vecRefT = getTsRefT(vecTimestamps,vecEventStartT,dblUseMaxDur,dblSuperResFactor);
 	
 	%get data
 	%build interpolated data
-	[vecRefT,matTracePerTrial] = getInterpolatedTimeSeries(vecTimestamps,vecData,vecEventStartT,dblUseMaxDur,vecRefT);
+	matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecEventStartT,vecRefT);
 	indRemPoints = vecRefT<0 | vecRefT>dblUseMaxDur;
 	vecRefT(indRemPoints) = [];
 	matTracePerTrial(:,indRemPoints)=[];

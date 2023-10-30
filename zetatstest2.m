@@ -1,7 +1,8 @@
-function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTime2,vecValue2,matEventTimes2,dblUseMaxDur,intResampNum,intPlot,boolPairwise,boolDirectQuantile,dblJitterSize)
+function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTime2,vecValue2,matEventTimes2,...
+		dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblSuperResFactor)
 	%zetatstest2 Calculates difference in responsiveness index zeta for two timeseries
 	%syntax: [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTime2,vecValue2,matEventTimes2,...
-	%								dblUseMaxDur,intResampNum,intPlot,boolPairwise,boolDirectQuantile,dblJitterSize)
+	%								dblUseMaxDur,intResampNum,intPlot,boolDirectQuantile,dblSuperResFactor)
 	%	input:
 	%	- vecTime1 [N x 1]: time (s) corresponding to entries in vecValue1
 	%	- vecValue1 [N x 1]: data values (e.g., calcium imaging dF/F0)
@@ -11,31 +12,33 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	%	- vecEventTimes2 [T x 1]: event on times (s), or [T x 2] including event off times
 	%	- dblUseMaxDur: float (s), ignore all values beyond this duration after stimulus onset
 	%								[default: minimum of trial start to trial start]
-	%	- intResampNum: integer, number of resamplings (default: 100)
+	%	- intResampNum: integer, number of resamplings (default: 250)
 	%	- intPlot: integer, plotting switch (0=none, 1=traces only, 2=activity heat map as well) (default: 0)
-	%	- boolPairwise: 0: unpaired test (e.g., same neuron in two contexts); or 1: trial-paired test 
-	%							(e.g., two simultaneously recorded neurons) (default: false)
-	%	- boolDirectQuantile; boolean, switch to use the empirical
-	%							null-distribution rather than the Gumbel approximation (default: false)
-	%	- dblJitterSize; scalar, sets the temporal jitter window relative to dblUseMaxDur (default: 2)
+	%	- boolDirectQuantile; boolean, switch to use the empirical null-distribution 
+	%									rather than the Gumbel approximation (default: false)
+	%	- dblSuperResFactor; scalar, upsampling of data when calculating zeta (default: 100)
 	%
 	%	output:
-	%	- dblZetaP; Zenith of Event-based Time-locked Anomalies: responsiveness z-score (i.e., >2 is significant)
+	%	- dblZetaP; Zenith of Event-based Time-locked Anomalies: responsiveness p-value
 	%	- sZETA; structure with fields:
-	%		- dblZETA; FDR-corrected responsiveness z-score (i.e., >2 is significant)
+	%		- dblZetaP: same as first output
+	%		- dblZETA; deviation z-score (i.e., >2 is significant)
 	%		- dblD; temporal deviation value underlying ZETA
-	%		- dblP; p-value corresponding to ZETA
-	%		- dblPeakT; time corresponding to ZETA
-	%		- intPeakIdx; entry corresponding to ZETA
-	%		- dblMeanD; Cohen's D based on mean-rate stim/base difference
-	%		- dblMeanP; p-value based on mean-rate stim/base difference
-	%		- vecTraceT: timestamps of trace entries (corresponding to vecZ)
-	%		- vecD; temporal deviation vector of data
-	%		- matRandD; baseline temporal deviation matrix of jittered data
+	%		- dblZetaT; time corresponding to ZETA
+	%		- intZetaIdx; entry corresponding to ZETA
+	%		- dblMeanZ; z-score based on mean-rate stim/base difference (compare with ZETA)
+	%		- dblMeanP; p-value based on mean-rate stim/base difference (compare with ZetaP)
+	%		- vecMu1; average spiking rate values per event underlying t-test for condition 1
+	%		- vecMu2; average spiking rate values per event underlying t-test for condition 2
+	%		- vecRefT: timestamps of trace entries (corresponding to vecRealDiff)
+	%		- vecRealDiff; real difference in cumulative density of spikes between condition 1&2
+	%		- matRandDiff; random differences in cumulative density of spikes
 	%
+	%v1.0 - rev20231019
+	
 	%Version history:
-	%1.0 - 2021 October 29
-	%	Created by Jorrit Montijn
+	%1.0 - 2023 October 19
+	%	Final release candidate [Created by Jorrit Montijn]
 	
 	%% prep data
 	%ensure orientation
@@ -51,7 +54,12 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	
 	%calculate stim/base difference?
 	boolStopSupplied = false;
-	dblMeanD = nan;
+	dblMeanZ = nan;
+	dblMeanP = nan;
+	vecBaseAct = [];
+	vecStimAct = [];
+	vecMu1 = [];
+	vecMu2 = [];
 	if size(matEventTimes1,2) > 2
 		matEventTimes1 = matEventTimes1';
 	end
@@ -69,17 +77,12 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	
 	%get resampling num
 	if ~exist('intResampNum','var') || isempty(intResampNum)
-		intResampNum = 1000;
+		intResampNum = 250;
 	end
 	
 	%get boolPlot
 	if ~exist('intPlot','var') || isempty(intPlot)
 		intPlot = 0;
-	end
-	
-	%get boolPairwise
-	if ~exist('boolPairwise','var') || isempty(boolPairwise)
-		boolPairwise = false; %original:1
 	end
 	
 	%get boolDirectQuantile
@@ -88,30 +91,34 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	end
 	
 	%get dblJitterSize
-	if ~exist('dblJitterSize','var') || isempty(dblJitterSize)
-		dblJitterSize = 2; %original:1
+	if ~exist('dblSuperResFactor','var') || isempty(dblSuperResFactor)
+		dblSuperResFactor = 100; %original:100
 	end
 	
-	%sampling interval
-	dblSamplingInterval = max(median(diff(vecTime1)),median(diff(vecTime2)));
+	%check inputs
+	assert(numel(vecTime1)==numel(vecValue1) && numel(vecTime2)==numel(vecValue2),...
+		[mfilename ':InputError'],['Input lengths do not match']);
+	assert(min(matEventTimes1(:,1))>min(vecTime1) && max(matEventTimes1(:,1))<(max(vecTime1)-dblUseMaxDur) ...
+		&& min(matEventTimes2(:,1))>min(vecTime2) && max(matEventTimes2(:,1))<(max(vecTime2)-dblUseMaxDur),...
+		[mfilename ':InputError'],['Events exist outside of data period']);
 	
 	%% get ts-zeta diff
 	vecEventStarts1 = matEventTimes1(:,1);
 	vecEventStarts2 = matEventTimes2(:,1);
 	if numel(vecEventStarts1) > 1 && numel(vecTime1) > 1 && numel(vecEventStarts2) > 1 && numel(vecTime2) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
-		[vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,vecRealFracLinear,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
-			calcTsZetaDiff(vecTime1,vecValue1,vecEventStarts1,vecTime2,vecValue2,vecEventStarts2,dblSamplingInterval,dblUseMaxDur,intResampNum,boolPairwise,boolDirectQuantile,dblJitterSize);
+		[vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dblZETA,intZetaIdx,matTracePerTrial1,matTracePerTrial2] = ...
+			calcTsZetaTwo(vecTime1,vecValue1,vecEventStarts1,vecTime2,vecValue2,vecEventStarts2,dblSuperResFactor,dblUseMaxDur,intResampNum,boolDirectQuantile);
 	else
-		intZETALoc = nan;
+		intZetaIdx = nan;
 	end
 	
 	%get location
-	dblMaxDTime = vecRefT(intZETALoc);
-	dblD = vecRealDiff(intZETALoc);
+	dblZetaT = vecRefT(intZetaIdx);
+	dblD = vecRealDiff(intZetaIdx);
 	
 	%% build placeholder outputs
 	sZETA = [];
-	if isnan(intZETALoc)
+	if isnan(intZetaIdx)
 		dblZetaP = 1;
 		dblZETA = 0;
 		warning([mfilename ':InsufficientSamples'],'Insufficient samples to calculate zeta');
@@ -154,7 +161,6 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 				vecThisTraceT = vecTime2;
 				vecThisTraceAct = vecValue2;
 			end
-			dblMedianBaseDur = median(vecEventStarts(2:end) - vecEventStops(1:(end-1)));
 			intTimeNum = numel(vecThisTraceT);
 			intMaxRep = numel(vecEventStarts);
 			vecBaseAct = nan(1,intMaxRep);
@@ -196,22 +202,14 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		vecMu2 = vecMu_Dur2 - vecMu_Pre2;
 		
 		%get metrics
-		if boolPairwise
-			[h,dblMeanP,ci,stats]=ttest(vecMu1,vecMu2);
-		else
-			[h,dblMeanP,ci,stats]=ttest2(vecMu1,vecMu2);
-		end
+		[h,dblMeanP,ci,stats]=ttest2(vecMu1,vecMu2);
 		dblMeanZ = -norminv(dblMeanP/2);
-	else
-		dblMeanZ = [];
-		vecBaseAct = [];
-		vecStimAct = [];
 	end
 	
 	%% plot
 	if intPlot
 		%plot maximally 100 traces
-		intPlotIters = min([size(cellRandDiff,2) 100]);
+		intPlotIters = min([size(matRandDiff,2) 100]);
 		
 		%maximize figure
 		figure;
@@ -234,23 +232,21 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		end
 		if intPlot > 1
 			subplot(2,3,1)
-			[vecRefT21,matTracePerTrial1] = getTraceInTrial(vecTime1,vecValue1,vecEventStarts1,dblSamplingInterval,dblUseMaxDur);
-			imagesc(vecRefT21,1:size(matTracePerTrial1,1),matTracePerTrial1);
+			imagesc(vecRefT,1:size(matTracePerTrial1,1),matTracePerTrial1,[0 1]);
 			colormap(hot);
 			xlabel('Time after event (s)');
 			ylabel('Trial #');
-			title('Z-scored activation data 1');
-			fixfig;
+			title('Rescaled data, condition 1');
+			colorbar;
 			grid off;
 			
 			subplot(2,3,4)
-			[vecRefT22,matTracePerTrial2] = getTraceInTrial(vecTime2,vecValue2,vecEventStarts2,dblSamplingInterval,dblUseMaxDur);
-			imagesc(vecRefT22,1:size(matTracePerTrial2,1),matTracePerTrial2);
+			imagesc(vecRefT,1:size(matTracePerTrial2,1),matTracePerTrial2,[0 1]);
 			colormap(hot);
 			xlabel('Time after event (s)');
 			ylabel('Trial #');
-			title('Z-scored activation data 2');
-			fixfig;
+			title('Rescaled data, condition 2');
+			colorbar;
 			grid off;
 		end
 		
@@ -258,17 +254,16 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		plot(vecRefT,vecRealFrac1);
 		hold on
 		plot(vecRefT,vecRealFrac2);
-		plot(vecRefT,vecRealFracLinear,'color',[0.5 0.5 0.5]);
 		title(sprintf('Real data, data 1 - data 2'));
 		xlabel('Time after event (s)');
-		ylabel('Fractional value in trial');
-		fixfig
+		ylabel('Cumululative sum in trial');
+		xlim([0 dblUseMaxDur]);
 		
 		subplot(2,3,3)
 		cla;
 		hold all
 		for intIter=1:intPlotIters
-			plot(vecRefT,cellRandDiff{intIter},'Color',[0.5 0.5 0.5]);
+			plot(vecRefT,matRandDiff(intIter,:),'Color',[0.5 0.5 0.5]);
 		end
 		plot(vecRefT,vecRealDiff,'Color',lines(1));
 		hold off
@@ -279,27 +274,26 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		else
 			title(sprintf('ZETA=%.3f (p=%.3f)',dblZETA,dblZetaP));
 		end
+		xlim([0 dblUseMaxDur]);
 		fixfig
 	end
 	
 	%% build optional output structure
 	if nargin > 1
 		sZETA = struct;
+		sZETA.dblZetaP = dblZetaP;
 		sZETA.dblZETA = dblZETA;
 		sZETA.dblD = dblD;
-		sZETA.dblP = dblZetaP;
-		sZETA.dblPeakT = dblMaxDTime;
-		sZETA.intPeakIdx = intZETALoc;
+		sZETA.dblZetaT = dblZetaT;
+		sZETA.intZetaIdx = intZetaIdx;
 		if boolStopSupplied
 			sZETA.dblMeanZ = dblMeanZ;
 			sZETA.dblMeanP = dblMeanP;
 			sZETA.vecMu1 = vecMu1;
 			sZETA.vecMu2 = vecMu2;
-			sZETA.vecMeanBase = vecStimAct;
-			sZETA.vecMeanStim = vecBaseAct;
 		end
-		sZETA.vecTime1 = vecTime1;
-		sZETA.vecD = vecRealDiff;
-		sZETA.cellRandDiff = cellRandDiff;
+		sZETA.vecRefT = vecRefT;
+		sZETA.vecRealDiff = vecRealDiff;
+		sZETA.matRandDiff = matRandDiff;
 	end
 end
