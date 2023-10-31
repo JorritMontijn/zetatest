@@ -190,12 +190,14 @@ vecTrials1 = sStim.Orientation==0;
 vecTrials2 = sStim.Orientation==90;
 fprintf('\nRunning two-sample zeta-test on one neuron, different stimuli\n')
 hTic6 = tic;
+rng(1,'twister');
 [dblZetaTwoSample2a,sZETA2a] = zetatest2(vecSpikeTimes1,matEventTimes(vecTrials1,:),vecSpikeTimes1,matEventTimes(vecTrials2,:),dblUseMaxDur,intResampNum,intPlot);
 dblElapsedTime6 = toc(hTic6);
 fprintf("\nIs neuron 1 responding differently to 0 and 90 degree stimuli? (elapsed time: %.2f s)\nzeta-test p-value: %f\nt-test p-value: %f\n",dblElapsedTime6,dblZetaTwoSample2a,sZETA2a.dblMeanP)
 
 %case 2b: is neuron 2 responding differently to gratings oriented at 30 and 60 degrees?
 hTic7 = tic;
+rng(1,'twister');
 [dblZetaTwoSample2b,sZETA2b] = zetatest2(vecSpikeTimes2,matEventTimes(vecTrials1,:),vecSpikeTimes2,matEventTimes(vecTrials2,:),dblUseMaxDur,intResampNum,intPlot);
 dblElapsedTime7 = toc(hTic7);
 fprintf("\nIs neuron 2 responding differently to 0 and 90 degree stimuli? (elapsed time: %.2f s)\nzeta-test p-value: %f\nt-test p-value: %f\n",dblElapsedTime7,dblZetaTwoSample2b,sZETA2b.dblMeanP)
