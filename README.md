@@ -1,7 +1,7 @@
 # The ZETA-test repository
 Repository containing ZETA-test functions and dependencies. For an example of how to use the code, check runExampleZETA.m in the /example/ subfolder. Your output should look like the images in the same directory. 
 
-Our pre-print describing data-stitching, the time-series ZETA-test, and the two-sample tests is now online: xxx!
+Our pre-print describing data-stitching, the time-series ZETA-test, and the two-sample tests is now online: https://www.biorxiv.org/content/10.1101/2023.10.30.564780v1
 
 The article describing the original ZETA-test has been published in eLife: https://elifesciences.org/articles/71969
 
