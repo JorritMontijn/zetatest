@@ -1,5 +1,6 @@
 function vecUniqueSpikeTimes = getUniqueSpikes(vecSpikeTimes)
 	%introduce minimum jitter to identical spikes
+	vecSpikeTimes = sort(vecSpikeTimes);
 	[vecUniqueSpikeTimes,ia,ic] = unique(vecSpikeTimes);
 	vecNotUnique = vecSpikeTimes(ia(diff(ia)>1));
 	if ~isempty(vecNotUnique)
