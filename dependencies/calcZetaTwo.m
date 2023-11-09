@@ -81,6 +81,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 	cellRandDiff = cell(1,intResampNum);
 	vecMaxRandD = nan(1,intResampNum);
 	cellAggregateTrials = cat(1,cellTimePerSpike1,cellTimePerSpike2);
+	ind0SpikesPerTrial = cellfun(@numel,cellAggregateTrials)==0;
 	intT1 = numel(cellTimePerSpike1);
 	intT2 = numel(cellTimePerSpike2);
 	intTotT = intT1+intT2;
@@ -96,7 +97,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 
 			cellTimePerSpike1_Rand = cellAggregateTrials(vecUseRand1);
 			cellTimePerSpike2_Rand = cellAggregateTrials(vecUseRand2);
-			if sum(cellfun(@numel,cellTimePerSpike2_Rand)) == 0 && sum(cellfun(@numel,cellTimePerSpike1_Rand)) == 0
+			if all(ind0SpikesPerTrial(vecUseRand1)) && all(ind0SpikesPerTrial(vecUseRand2))
 				continue;
 			end
 			
@@ -120,7 +121,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 			
 			cellTimePerSpike1_Rand = cellAggregateTrials(vecUseRand1);
 			cellTimePerSpike2_Rand = cellAggregateTrials(vecUseRand2);
-			if sum(cellfun(@numel,cellTimePerSpike2_Rand)) == 0 && sum(cellfun(@numel,cellTimePerSpike1_Rand)) == 0
+			if all(ind0SpikesPerTrial(vecUseRand1)) && all(ind0SpikesPerTrial(vecUseRand2))
 				continue;
 			end
 			
