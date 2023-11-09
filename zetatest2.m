@@ -37,11 +37,14 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 	%		- intZetaIdx_InvSign; entry corresponding to -ZETA
 	%		- dblUseMaxDur; window length used to calculate ZETA
 	%
-	%v1.0 - rev20231019
+	%v1.1 - rev20231109
 	
 	%Version history:
 	%1.0 - 2023 October 19
 	%	Final release candidate [Created by Jorrit Montijn]
+	%1.1 - 2023 November 9
+	%	Considerable speed-up (~33% computation time) using lininterp1f.c by Umberto Picchini and
+	%	a modified getUniqueSpikes that circumvents the use of unique() [by JM]
 	
 	%% prep data
 	%ensure orientation
