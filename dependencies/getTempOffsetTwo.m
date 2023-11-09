@@ -1,8 +1,8 @@
 function [vecSpikeT,vecThisDiff,vecThisFrac1,vecSpikeTimes1,vecThisFrac2,vecSpikeTimes2] = ...
-		getTempOffsetTwo(cellTimePerSpike1,cellTimePerSpike2,dblUseMaxDur)
+		getTempOffsetTwo(cellTimePerSpike1,cellTimePerSpike2,dblUseMaxDur,boolFastInterp)
 		%getTempOffsetTwo Calculate temporal offset vectors. Syntax:
 	%[vecSpikeT,vecThisDiff,vecThisFrac1,vecSpikeTimes1,vecThisFrac2,vecSpikeTimes2] = ...
-	%	getTempOffsetTwo(cellTimePerSpike1,cellTimePerSpike2,dblUseMaxDur)
+	%	getTempOffsetTwo(cellTimePerSpike1,cellTimePerSpike2,dblUseMaxDur,boolFastInterp)
 	%This is a subfunction for zetatest2().
 	
 	%%
@@ -19,12 +19,20 @@ function [vecSpikeT,vecThisDiff,vecThisFrac1,vecSpikeTimes1,vecThisFrac2,vecSpik
 	
 	%spike fraction #1
 	vecUniqueSpikeFracs1 = (1:intSp1)'/intT1;
-	vecThisFrac1 = interp1([0;vecSpikeTimes1;dblUseMaxDur],[0;vecUniqueSpikeFracs1;intSp1/intT1],vecSpikeT);
+	if boolFastInterp
+		vecThisFrac1 = lininterp1f([0;vecSpikeTimes1;dblUseMaxDur],[0;vecUniqueSpikeFracs1;intSp1/intT1],vecSpikeT,nan)';
+	else
+		vecThisFrac1 = interp1([0;vecSpikeTimes1;dblUseMaxDur],[0;vecUniqueSpikeFracs1;intSp1/intT1],vecSpikeT);
+	end
 	vecThisFrac1 = fillnans(vecThisFrac1,intSp1,intT1);
 	
 	%spike fraction #2
 	vecUniqueSpikeFracs2 = (1:intSp2)'/intT2;
-	vecThisFrac2 = interp1([0;vecSpikeTimes2;dblUseMaxDur],[0;vecUniqueSpikeFracs2;intSp2/intT2],vecSpikeT);
+	if boolFastInterp
+		vecThisFrac2 = lininterp1f([0;vecSpikeTimes2;dblUseMaxDur],[0;vecUniqueSpikeFracs2;intSp2/intT2],vecSpikeT,nan)';
+	else
+		vecThisFrac2 = interp1([0;vecSpikeTimes2;dblUseMaxDur],[0;vecUniqueSpikeFracs2;intSp2/intT2],vecSpikeT);
+	end
 	vecThisFrac2 = fillnans(vecThisFrac2,intSp2,intT2);
 	
 	%take difference

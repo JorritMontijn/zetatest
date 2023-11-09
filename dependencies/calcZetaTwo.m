@@ -23,6 +23,29 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
         end
 	end
 	
+	%% check if we can use the fast interpolation function
+	boolFastInterp = false;
+	try
+		vecTest = lininterp1f([0;0.25;1],[0;0.5;1],[-1;0;0.1;0.5;1],nan);
+		if isnan(vecTest(1)) && all(vecTest(2:5)==[0 0.2 2/3 1])
+			boolFastInterp = true;
+		else
+			error('lininterp1f gives incorrect output');
+		end
+	catch
+		try
+			mex('lininterp1f.c');
+			vecTest = lininterp1f([0;0.25;1],[0;0.5;1],[-1;0;0.1;0.5;1],nan);
+			if isnan(vecTest(1)) && all(vecTest(2:5)==[0 0.2 2/3 1])
+				boolFastInterp = true;
+			else
+				error('lininterp1f gives incorrect output');
+			end
+		catch
+			boolUseParallel = false;
+		end
+	end
+	
 	%% reduce spikes
 	if size(vecEventStarts1,2)>2,error([mfilename ':IncorrectMatrixForm'],'Incorrect input form for vecEventStarts; size must be [m x 1] or [m x 2]');end
 	vecEventT1 = vecEventStarts1(:,1);
@@ -46,7 +69,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 	
 	%get difference
 	[vecSpikeT,vecRealDiff,vecRealFrac1,vecThisSpikeTimes1,vecRealFrac2,vecThisSpikeTimes2] = ...
-		getTempOffsetTwo(cellTimePerSpike1,cellTimePerSpike2,dblUseMaxDur);
+		getTempOffsetTwo(cellTimePerSpike1,cellTimePerSpike2,dblUseMaxDur,boolFastInterp);
 	if numel(vecRealDiff) < 2
 		return
 	end
@@ -79,7 +102,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 			
 			%get difference
 			[vecRandSpikeT,vecRandDiff] = ...
-				getTempOffsetTwo(cellTimePerSpike1_Rand,cellTimePerSpike2_Rand,dblUseMaxDur);
+				getTempOffsetTwo(cellTimePerSpike1_Rand,cellTimePerSpike2_Rand,dblUseMaxDur,boolFastInterp);
 			
 			%assign data
 			cellRandT{intResampling} = vecRandSpikeT;
@@ -103,7 +126,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 			
 			%get difference
 			[vecRandSpikeT,vecRandDiff] = ...
-				getTempOffsetTwo(cellTimePerSpike1_Rand,cellTimePerSpike2_Rand,dblUseMaxDur);
+				getTempOffsetTwo(cellTimePerSpike1_Rand,cellTimePerSpike2_Rand,dblUseMaxDur,boolFastInterp);
 			
 			%assign data
 			cellRandT{intResampling} = vecRandSpikeT;
