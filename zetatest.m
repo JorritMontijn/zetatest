@@ -234,7 +234,7 @@ function [dblZetaP,sZETA,sRate,sLatencies] = zetatest(vecSpikeTimes,matEventTime
 	dblD_InvSign = vecRealDiff(intPeakLocInvSign);
 	
 	%% calculate mean-rate difference with t-test
-	if boolStopSupplied && (nargout > 1 || intPlot > 1)
+	if boolStopSupplied
 		vecRespBinsDur = sort(flat([matEventTimes(:,1) matEventTimes(:,2)]));
 		vecR = histcounts(vecSpikeTimes,vecRespBinsDur);
 		vecD = diff(vecRespBinsDur)';
