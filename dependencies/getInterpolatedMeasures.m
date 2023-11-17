@@ -20,7 +20,6 @@ function matCond_ext = getInterpolatedMeasures(vecRefT,vecT,matCond)
 	else
 		boolUseNew=false;
 	end
-	boolDebug = false;
 	
 	if nargout > 1
 		error;
@@ -37,7 +36,7 @@ function matCond_ext = getInterpolatedMeasures(vecRefT,vecT,matCond)
 		%% interpolate
 		%bypass time-consuming checks and use direct method
 		if boolUseNew
-			vecInterpTrace = matlab.internal.math.interp1(vecUseTimes,vecUseTrace,'linear','none',vecUseInterpT);
+			vecInterpTrace = matlab.internal.math.interp1(vecUseTimes,vecUseTrace,'linear','none',vecRefT);
 		else
 			vecInterpTrace = interp1(vecUseTimes,vecUseTrace,vecRefT,'linear',nan);
 		end
