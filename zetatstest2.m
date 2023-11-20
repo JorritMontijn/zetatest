@@ -56,8 +56,8 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	boolStopSupplied = false;
 	dblMeanZ = nan;
 	dblMeanP = nan;
-	vecBaseAct = [];
-	vecStimAct = [];
+	matDataPerTrial1 = [];
+	matDataPerTrial2 = [];
 	vecMu1 = [];
 	vecMu2 = [];
 	if size(matEventTimes1,2) > 2
@@ -106,7 +106,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	vecEventStarts1 = matEventTimes1(:,1);
 	vecEventStarts2 = matEventTimes2(:,1);
 	if numel(vecEventStarts1) > 1 && numel(vecTime1) > 1 && numel(vecEventStarts2) > 1 && numel(vecTime2) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
-		[vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dblZETA,intZetaIdx,matTracePerTrial1,matTracePerTrial2] = ...
+		[vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dblZETA,intZetaIdx,matDataPerTrial1,matDataPerTrial2] = ...
 			calcTsZetaTwo(vecTime1,vecValue1,vecEventStarts1,vecTime2,vecValue2,vecEventStarts2,dblSuperResFactor,dblUseMaxDur,intResampNum,boolDirectQuantile);
 	else
 		intZetaIdx = nan;
@@ -125,23 +125,22 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		
 		%build placeholder outputs
 		sZETA = struct;
+		sZETA.dblZetaP = dblZetaP;
 		sZETA.dblZETA = dblZETA;
-		sZETA.dblD = 0;
-		sZETA.dblP = 1;
-		sZETA.dblPeakT = nan;
-		sZETA.intPeakIdx = [];
+		sZETA.dblD = [];
+		sZETA.dblZetaT = [];
+		sZETA.intZetaIdx = [];
 		if boolStopSupplied
-			sZETA.dblMeanD = 0;
-			sZETA.dblMeanP = 1;
+			sZETA.dblMeanZ = [];
+			sZETA.dblMeanP = [];
+			sZETA.vecMu1 = [];
+			sZETA.vecMu2 = [];
 		end
 		sZETA.vecRefT = [];
-		sZETA.vecD = [];
-		sZETA.matRandD = [];
-		
-		sZETA.dblD_InvSign = 0;
-		sZETA.dblPeakT_InvSign = nan;
-		sZETA.intPeakIdx_InvSign = [];
-		sZETA.dblUseMaxDur = nan;
+		sZETA.vecRealDiff = [];
+		sZETA.matRandDiff = [];
+		sZETA.matDataPerTrial1 = [];
+		sZETA.matDataPerTrial2 = [];
 		return
 	end
 	
@@ -232,7 +231,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		end
 		if intPlot > 1
 			subplot(2,3,1)
-			imagesc(vecRefT,1:size(matTracePerTrial1,1),matTracePerTrial1,[0 1]);
+			imagesc(vecRefT,1:size(matDataPerTrial1,1),matDataPerTrial1,[0 1]);
 			colormap(hot);
 			xlabel('Time after event (s)');
 			ylabel('Trial #');
@@ -241,7 +240,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 			grid off;
 			
 			subplot(2,3,4)
-			imagesc(vecRefT,1:size(matTracePerTrial2,1),matTracePerTrial2,[0 1]);
+			imagesc(vecRefT,1:size(matDataPerTrial2,1),matDataPerTrial2,[0 1]);
 			colormap(hot);
 			xlabel('Time after event (s)');
 			ylabel('Trial #');
@@ -270,9 +269,9 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		xlabel('Time after event (s)');
 		ylabel('Deviation difference (\deltas)');
 		if boolStopSupplied
-			title(sprintf('ZETA=%.3f (p=%.3f), z(mean)=%.3f (p=%.3f)',dblZETA,dblZetaP,dblMeanZ,dblMeanP));
+			title(sprintf('T-ZETA2=%.3f (p=%.3f), z(mean)=%.3f (p=%.3f)',dblZETA,dblZetaP,dblMeanZ,dblMeanP));
 		else
-			title(sprintf('ZETA=%.3f (p=%.3f)',dblZETA,dblZetaP));
+			title(sprintf('T-ZETA2=%.3f (p=%.3f)',dblZETA,dblZetaP));
 		end
 		xlim([0 dblUseMaxDur]);
 		fixfig
@@ -295,5 +294,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		sZETA.vecRefT = vecRefT;
 		sZETA.vecRealDiff = vecRealDiff;
 		sZETA.matRandDiff = matRandDiff;
+		sZETA.matDataPerTrial1 = matDataPerTrial1;
+		sZETA.matDataPerTrial2 = matDataPerTrial2;
 	end
 end

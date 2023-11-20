@@ -68,6 +68,15 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 	[dblMaxD,intZETALoc]= max(abs(vecRealDiff));
 	intSamples = numel(vecRealDiff);
 	intTrials = numel(vecPseudoStartT);
+	dblSampHz = 1/max(diff(vecPseudoT));
+	dblSampsPerDur = dblSampHz*dblUseMaxDur;
+	
+	%check if stimulus times are aligned with sample times
+	if all(ismember(vecPseudoStartT,vecPseudoT))
+		dblSuperResFactorOrRefT = vecRefT;
+	else
+		dblSuperResFactorOrRefT = dblSuperResFactor;
+	end
 	
 	%% run bootstraps; try parallel, otherwise run normal loop
 	% run pre-set number of iterations
@@ -90,6 +99,12 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 		end
 	end
 	
+	%discretize jitters if dblFs > intResampNum
+	vecStepT = unique(diff(vecRefT));
+	if dblSampsPerDur > intResampNum && numel(vecStepT)==1
+		matJitterPerTrial=round(matJitterPerTrial/vecStepT(1))*vecStepT(1);
+	end
+	
 	%% this part is only to check if matlab and python give the same exact results
 	% unfortunately matlab's randperm() and numpy's np.random.permutation give different outputs even with
 	% identical seeds and identical random number generators, so I've had to load in a table of random values here...
@@ -110,7 +125,7 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
 			%get temp offset
-			[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblUseMaxDur,dblSuperResFactor);
+			[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblUseMaxDur,dblSuperResFactorOrRefT);
 			
 			%assign data
 			cellRandT{intResampling} = vecRandT;
@@ -123,7 +138,7 @@ function [vecRefT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDi
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
 			%get temp offset
-			[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblUseMaxDur,dblSuperResFactor);
+			[vecRandDiff,vecThisFrac,vecThisFracLinear,vecRandT] = getTraceOffsetOne(vecPseudoT,vecPseudoTrace,vecStimUseOnTime,dblUseMaxDur,dblSuperResFactorOrRefT);
 			
 			%assign data
 			cellRandT{intResampling} = vecRandT;

@@ -223,9 +223,9 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 		xlabel('Time after event (s)');
 		ylabel('Deviation difference (\deltas)');
 		if boolStopSupplied
-			title(sprintf('ZETA=%.3f (p=%.3f), z(Hz)=%.3f (p=%.3f)',dblZETA,dblZetaP,dblMeanZ,dblMeanP));
+			title(sprintf('ZETA2=%.3f (p=%.3f), z(Hz)=%.3f (p=%.3f)',dblZETA,dblZetaP,dblMeanZ,dblMeanP));
 		else
-			title(sprintf('ZETA=%.3f (p=%.3f)',dblZETA,dblZetaP));
+			title(sprintf('ZETA2=%.3f (p=%.3f)',dblZETA,dblZetaP));
 		end
 		fixfig
 	end

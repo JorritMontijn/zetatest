@@ -17,6 +17,6 @@ function [vecThisDiff,vecThisFrac1,vecThisFrac2] = getTraceOffsetTwo(matTracePer
 	vecDeviation = vecThisFrac1 - vecThisFrac2;
 	
 	%mean-subtract?
-	vecThisDiff = vecDeviation - mean(vecDeviation) + vecDeviation(1);
+	vecThisDiff = vecDeviation - mean(vecDeviation);
 end
 

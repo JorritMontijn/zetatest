@@ -268,11 +268,11 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 		plot(vecRefT,vecRealDiff,'Color',lines(1));
 		hold off
 		xlabel('Time after event (s)');
-		ylabel('Offset of data from linear (s)');
+		ylabel('Data deviation');
 		if boolStopSupplied
-			title(sprintf('ZETA=%.3f (p=%.3f), z(mean)=%.3f (p=%.3f)',dblZETA,dblZetaP,dblMeanZ,dblMeanP));
+			title(sprintf('T-ZETA=%.3f (p=%.3f), z(mean)=%.3f (p=%.3f)',dblZETA,dblZetaP,dblMeanZ,dblMeanP));
 		else
-			title(sprintf('ZETA=%.3f (p=%.3f)',dblZETA,dblZetaP));
+			title(sprintf('T-ZETA=%.3f (p=%.3f)',dblZETA,dblZetaP));
 		end
 		fixfig
 		

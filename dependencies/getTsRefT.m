@@ -29,6 +29,8 @@ function vecRefT = getTsRefT(vecTimestamps,vecEventStartT,dblUseMaxDur,dblSuperR
 	if dblSuperResFactor == 1
 		[dummy,intUseEntry]=max(cellfun(@numel,cellRefT));
 		vecRefT = cellRefT{intUseEntry};
+		dblMedDiff = median(diff(vecRefT));
+		vecRefT = round(10*(vecRefT/dblMedDiff))/(10/dblMedDiff);
 	else
 		dblSampInterval = median(diff(vecTimestamps));
 		dblTol = dblSampInterval/dblSuperResFactor;
