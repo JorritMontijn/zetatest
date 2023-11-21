@@ -40,7 +40,7 @@ function matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecE
 		%intStopT = min([numel(vecTimestamps) find(vecTimestamps > (dblStartT + vecRefT(end)),1)]);
 		dblLocalStartT=dblStartT+vecRefT(1);
 		for intCurrIdx=intCurrIdx:intSampleNum
-			if vecTimestamps(intCurrIdx)>dblLocalStartT, break, end
+			if vecTimestamps(intCurrIdx)>=dblLocalStartT, break, end
 		end
 		intStartT = max([1 intCurrIdx-1]);
 		intStartIdx = intCurrIdx;
@@ -78,7 +78,7 @@ function matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecE
 					break
 				end
 			end
-			vecAlignedSamples = (1:numel(vecUseInterpT))+intAlignBy-1;
+			vecAlignedSamples = (1:(numel(vecUseTimes)-intAlignBy))+intAlignBy-1;
 			if ~any(abs(vecUseTimes(vecAlignedSamples([1 end]))-vecUseInterpT([1 end])) > dblCritDiff)
 				boolDirect = true;
 			end
