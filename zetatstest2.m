@@ -41,6 +41,13 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	%	Final release candidate [Created by Jorrit Montijn]
 	
 	%% prep data
+	%check inputs
+	assert(numel(vecTime1)==numel(vecValue1) && numel(vecTime2)==numel(vecValue2),...
+		[mfilename ':InputError'],['Input lengths do not match']);
+	assert(min(matEventTimes1(:,1))>min(vecTime1) && max(matEventTimes1(:,1))<(max(vecTime1)-dblUseMaxDur) ...
+		&& min(matEventTimes2(:,1))>min(vecTime2) && max(matEventTimes2(:,1))<(max(vecTime2)-dblUseMaxDur),...
+		[mfilename ':InputError'],['Events exist outside of data period']);
+	
 	%ensure orientation
 	vecTime1 = vecTime1(:);
 	[vecTime1,vecReorder1] = sort(vecTime1);
@@ -95,13 +102,6 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 		dblSuperResFactor = 100; %original:100
 	end
 	
-	%check inputs
-	assert(numel(vecTime1)==numel(vecValue1) && numel(vecTime2)==numel(vecValue2),...
-		[mfilename ':InputError'],['Input lengths do not match']);
-	assert(min(matEventTimes1(:,1))>min(vecTime1) && max(matEventTimes1(:,1))<(max(vecTime1)-dblUseMaxDur) ...
-		&& min(matEventTimes2(:,1))>min(vecTime2) && max(matEventTimes2(:,1))<(max(vecTime2)-dblUseMaxDur),...
-		[mfilename ':InputError'],['Events exist outside of data period']);
-	
 	%% get ts-zeta diff
 	vecEventStarts1 = matEventTimes1(:,1);
 	vecEventStarts2 = matEventTimes2(:,1);
@@ -145,7 +145,7 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 	end
 	
 	%% calculate mean-rate difference with t-test
-	if boolStopSupplied && (nargout > 1 || intPlot > 1)
+	if boolStopSupplied
 		for intTrace=1:2
 			if intTrace == 1
 				%pre-allocate
@@ -162,7 +162,6 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 			end
 			intTimeNum = numel(vecThisTraceT);
 			intMaxRep = numel(vecEventStarts);
-			vecBaseAct = nan(1,intMaxRep);
 			vecStimAct = nan(1,intMaxRep);
 			
 			%go through trials to build spike time vector
@@ -179,26 +178,22 @@ function [dblZetaP,sZETA] = zetatstest2(vecTime1,vecValue1,matEventTimes1,vecTim
 				vecSelectFramesStim = intStartT:intStopT;
 				
 				%% get data
-				vecUseBaseTrace = vecThisTraceAct(vecSelectFramesBase);
 				vecUseStimTrace = vecThisTraceAct(vecSelectFramesStim);
 				
 				%% get activity
-				vecBaseAct(intEvent) = mean(vecUseBaseTrace);
 				vecStimAct(intEvent) = mean(vecUseStimTrace);
 			end
 			
 			if intTrace == 1
-				vecMu_Pre1 = vecBaseAct;
 				vecMu_Dur1 = vecStimAct;
 			else
-				vecMu_Pre2 = vecBaseAct;
 				vecMu_Dur2 = vecStimAct;
 			end
 		end
 		
 		%difference
-		vecMu1 = vecMu_Dur1 - vecMu_Pre1;
-		vecMu2 = vecMu_Dur2 - vecMu_Pre2;
+		vecMu1 = vecMu_Dur1;
+		vecMu2 = vecMu_Dur2;
 		
 		%get metrics
 		[h,dblMeanP,ci,stats]=ttest2(vecMu1,vecMu2);
