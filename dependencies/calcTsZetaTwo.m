@@ -60,7 +60,8 @@ function [vecRefT,vecRealDiff,vecRealFrac1,vecRealFrac2,matRandDiff,dblZetaP,dbl
 	%set tol
 	dblSampInterval = (median(diff(vecRefT1)) + median(diff(vecRefT2)))/2;
 	dblTol = dblSampInterval/dblSuperResFactor;
-	vecRefT = uniquetol(cat(1,vecRefT1(:),vecRefT2(:)),dblTol);
+	vecRefC = cat(1,vecRefT1(:),vecRefT2(:));
+	vecRefT = uniquetol(vecRefC,(dblTol*0.99)/max(abs(vecRefC)));
 	intT = numel(vecRefT);
 	
 	%matrices
