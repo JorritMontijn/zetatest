@@ -78,8 +78,9 @@ function matTracePerTrial = getInterpolatedTimeSeries(vecTimestamps,vecData,vecE
 					break
 				end
 			end
-			vecAlignedSamples = (1:(numel(vecUseTimes)-intAlignBy))+intAlignBy-1;
-			if ~any(abs(vecUseTimes(vecAlignedSamples([1 end]))-vecUseInterpT([1 end])) > dblCritDiff)
+			intNumNrefT = numel(vecRefT);
+			vecAlignedSamples = (1:intNumNrefT)+intAlignBy-1;
+			if (intNumNrefT+intAlignBy-1) <= numel(vecUseTimes) && ~any(abs(vecUseTimes(vecAlignedSamples([1 end]))-vecUseInterpT([1 end])) > dblCritDiff)
 				boolDirect = true;
 			end
 		end
