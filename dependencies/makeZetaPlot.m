@@ -120,7 +120,7 @@ function vecHandles = makeZetaPlot(vecSpikeTimes,matEventTimes,sZETA,sRate,intPl
 	else
 		title(sprintf('ZETA=%.3f (p=%.3f)',dblZETA,dblZetaP));
 	end
-	
+	ylim([-1.001 1.001]*max(abs(get(gca,'ylim'))));
 	
 	%% plot
 	if intPlot == 1
