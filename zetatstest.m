@@ -145,7 +145,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 		%pre-allocate
 		vecEventStops = matEventTimes(:,2);
 		intTimeNum = numel(vecTime);
-		if ~exist('dblUseMaxDurTtest','var') || ~isempty(dblUseMaxDurTtest)
+		if ~exist('dblUseMaxDurTtest','var') || isempty(dblUseMaxDurTtest)
 			dblUseMaxDurTtest = dblUseMaxDur;
 		end
 		
