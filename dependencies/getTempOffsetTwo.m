@@ -1,15 +1,17 @@
 function [vecSpikeT,vecThisDiff,vecThisFrac1,vecSpikeTimes1,vecThisFrac2,vecSpikeTimes2] = ...
-		getTempOffsetTwo(cellTimePerSpike1,cellTimePerSpike2,dblUseMaxDur,boolFastInterp)
+		getTempOffsetTwo(cellTimePerSpike1,cellTimePerSpike2,dblUseMaxDur,boolFastInterp,vecSpikeT)
 		%getTempOffsetTwo Calculate temporal offset vectors. Syntax:
 	%[vecSpikeT,vecThisDiff,vecThisFrac1,vecSpikeTimes1,vecThisFrac2,vecSpikeTimes2] = ...
-	%	getTempOffsetTwo(cellTimePerSpike1,cellTimePerSpike2,dblUseMaxDur,boolFastInterp)
+	%	getTempOffsetTwo(cellTimePerSpike1,cellTimePerSpike2,dblUseMaxDur,boolFastInterp,vecSpikeT)
 	%This is a subfunction for zetatest2().
 	
 	%%
 	vecSpikeTimes1 = getUniqueSpikes(cell2vec(cellTimePerSpike1));
 	vecSpikeTimes2 = getUniqueSpikes(cell2vec(cellTimePerSpike2));
-	vecSpikeT = sort(cat(1,vecSpikeTimes1,vecSpikeTimes2));
-	vecSpikeT = [0;sort(vecSpikeT(:),'ascend');dblUseMaxDur]; %add start/end
+	if nargin < 5 || isempty(vecSpikeT)
+		vecSpikeT = sort(cat(1,vecSpikeTimes1,vecSpikeTimes2));
+		vecSpikeT = [0;sort(vecSpikeT(:),'ascend');dblUseMaxDur]; %add start/end
+	end
 	
 	%cond1 goes to S1_n/T1_n; cond2 goes to S2_n/T2_n
 	intSp1 = numel(vecSpikeTimes1);

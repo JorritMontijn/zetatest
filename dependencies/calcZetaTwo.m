@@ -103,7 +103,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 			
 			%get difference
 			[vecRandSpikeT,vecRandDiff] = ...
-				getTempOffsetTwo(cellTimePerSpike1_Rand,cellTimePerSpike2_Rand,dblUseMaxDur,boolFastInterp);
+				getTempOffsetTwo(cellTimePerSpike1_Rand,cellTimePerSpike2_Rand,dblUseMaxDur,boolFastInterp,vecSpikeT);
 			
 			%assign data
 			cellRandT{intResampling} = vecRandSpikeT;
@@ -127,7 +127,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac1,vecRealFrac2,cellRandT,cellRandDiff
 			
 			%get difference
 			[vecRandSpikeT,vecRandDiff] = ...
-				getTempOffsetTwo(cellTimePerSpike1_Rand,cellTimePerSpike2_Rand,dblUseMaxDur,boolFastInterp);
+				getTempOffsetTwo(cellTimePerSpike1_Rand,cellTimePerSpike2_Rand,dblUseMaxDur,boolFastInterp,vecSpikeT);
 			
 			%assign data
 			cellRandT{intResampling} = vecRandSpikeT;
