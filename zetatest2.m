@@ -227,7 +227,8 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 		else
 			title(sprintf('ZETA2=%.3f (p=%.3f)',dblZETA,dblZetaP));
 		end
-		fixfig
+		ylim([-1 1]*max(abs(get(gca,'ylim'))));
+		fixfig;
 	end
 	
 	%% build optional output structure
