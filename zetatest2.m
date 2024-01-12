@@ -208,7 +208,7 @@ function [dblZetaP,sZETA] = zetatest2(vecSpikeTimes1,matEventTimes1,vecSpikeTime
 		plot(vecSpikeT,vecRealFrac2);
 		title(sprintf('Real data, data 1 - data 2'));
 		xlabel('Time after event (s)');
-		ylabel('Fractional position of spike in trial');
+		ylabel('Cumulative number of spikes per trial');
 		
 		subplot(2,3,3)
 		cla;
