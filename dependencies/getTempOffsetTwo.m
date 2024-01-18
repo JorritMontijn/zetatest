@@ -40,9 +40,6 @@ function [vecSpikeT,vecThisDiff,vecThisFrac1,vecSpikeTimes1,vecThisFrac2,vecSpik
 	%take difference
 	vecDeviation = vecThisFrac1 - vecThisFrac2;
 	
-	%subtract linear baseline
-	vecDeviation = vecDeviation - (vecSpikeT./dblUseMaxDur)*vecDeviation(end);
-	
 	%mean-subtract
 	vecThisDiff = vecDeviation - mean(vecDeviation);
 end
