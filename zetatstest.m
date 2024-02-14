@@ -282,6 +282,7 @@ function [dblZetaP,sZETA] = zetatstest(vecTime,vecData,matEventTimes,dblUseMaxDu
 			colormap(hot);
 			xlabel('Time after event (s)');
 			ylabel('Trial #');
+			title('With super-resolution');
 			fixfig;
 			grid off;
 			
