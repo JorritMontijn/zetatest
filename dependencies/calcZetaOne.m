@@ -35,7 +35,7 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 	dblStartT = max([vecSpikeTimes(1) min(vecEventT)-dblUseMaxDur*5*dblJitterSize]);
 	dblStopT = max(vecEventT)+dblUseMaxDur*5*dblJitterSize;
 	vecSpikeTimes(vecSpikeTimes < dblStartT | vecSpikeTimes > dblStopT) = [];
-	if numel(vecSpikeTimes) < 3
+	if numel(vecSpikeTimes) < 1
 		return;
 	end
 	
@@ -91,14 +91,10 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
 			%get temp offset
-			%[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear,vecThisSpikeTimes] = ...
-			%    getTempOffsetOne(vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
 			[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear] = ...
 				getTempOffset(vecSpikeT,vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
 			
 			%assign data
-			%cellRandT{intResampling} = vecThisSpikeTimes;
-			%cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
 			cellRandT{intResampling} = vecSpikeT;
 			cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
 			vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));
@@ -109,14 +105,10 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
 			%get temp offset
-			%[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear,vecThisSpikeTimes] = ...
-			%    getTempOffsetOne(vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
 			[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear] = ...
 				getTempOffset(vecSpikeT,vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
 			
 			%assign data
-			%cellRandT{intResampling} = vecThisSpikeTimes;
-			%cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
 			cellRandT{intResampling} = vecSpikeT;
 			cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
 			vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));

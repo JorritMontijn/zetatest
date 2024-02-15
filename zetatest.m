@@ -176,7 +176,7 @@ function [dblZetaP,sZETA,sRate,sLatencies] = zetatest(vecSpikeTimes,matEventTime
 	end
 	
 	%% get zeta
-	if numel(matEventTimes) > 1 && numel(vecSpikeTimes) > 1 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
+	if numel(matEventTimes) > 1 && numel(vecSpikeTimes) > 0 && ~isempty(dblUseMaxDur) && dblUseMaxDur>0
 		vecEventStarts = matEventTimes(:,1);
 		boolUseParallel = [];
 		[vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRandDiff,dblZetaP,dblZETA,intZETALoc] = ...
