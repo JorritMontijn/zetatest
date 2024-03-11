@@ -45,6 +45,8 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
     %1.2.2 - August 22 2023
 	%	Changed max scale from B log(max(vecT)/10) to B log(range(vecT)/10); shouldn't have an
     %	effect in most cases, as min(vecT) is always 0 unless this function is used directly [by JM] 
+	%1.3 - March 11 2024
+	%	Changed derivative calculation to nested for loop; drastic speed increase [by JM] 
 
 	%% set default values
 	if ~exist('dblSmoothSd','var') || isempty(dblSmoothSd)
@@ -87,32 +89,16 @@ function [vecRate,sMSD] = getMultiScaleDeriv(vecT,vecV,dblSmoothSd,dblMinScale,d
 	intN = numel(vecT);
 	matMSD = zeros(intN,intScaleNum);
 	if boolUseParallel
-		try
-			parfor intScaleIdx=1:intScaleNum
-				dblScale = vecScale(intScaleIdx);
-				%run through all points
-				matMSD(:,intScaleIdx) = calcSingleMSD_mex(dblScale,vecT,vecV);
-			end
-		catch
-			parfor intScaleIdx=1:intScaleNum
-				dblScale = vecScale(intScaleIdx);
-				%run through all points
-				matMSD(:,intScaleIdx) = calcSingleMSD(dblScale,vecT,vecV);
-			end
+		parfor intScaleIdx=1:intScaleNum
+			dblScale = vecScale(intScaleIdx);
+			%run through all points
+			matMSD(:,intScaleIdx) = calcSingleMSD(dblScale,vecT,vecV);
 		end
 	else
-		try
-			for intScaleIdx=1:intScaleNum
-				dblScale = vecScale(intScaleIdx);
-				%run through all points
-				matMSD(:,intScaleIdx) = calcSingleMSD_mex(dblScale,vecT,vecV);
-			end
-		catch
-			for intScaleIdx=1:intScaleNum
-				dblScale = vecScale(intScaleIdx);
-				%run through all points
-				matMSD(:,intScaleIdx) = calcSingleMSD(dblScale,vecT,vecV);
-			end
+		for intScaleIdx=1:intScaleNum
+			dblScale = vecScale(intScaleIdx);
+			%run through all points
+			matMSD(:,intScaleIdx) = calcSingleMSD(dblScale,vecT,vecV);
 		end
 	end
 
@@ -153,27 +139,43 @@ end
 function vecMSD = calcSingleMSD(dblScale,vecT,vecV)
 	intN = numel(vecT);
 	vecMSD = zeros(intN,1);
-
+	
 	%run through all points
+	intLastMinEdge = 1;
+	intLastMaxEdge = 1;
 	for intS=1:intN
-		%select points within window
 		dblT = vecT(intS);
+		%find min edge
 		dblMinEdge = dblT - dblScale/2;
-		dblMaxEdge = dblT + dblScale/2;
-		indCompMin = vecT > dblMinEdge;
-		intIdxMinT = find(indCompMin,1,'first');
-		if isempty(intIdxMinT)
-			intIdxMinT=1;
-		else
-			intIdxMinT = intIdxMinT(1);
+		boolFoundMin = false;
+		for intIdxMinT=intLastMinEdge:intN
+			boolFoundMin = vecT(intIdxMinT) > dblMinEdge;
+			if boolFoundMin
+				break;
+			end
 		end
-		indCompMax = vecT > dblMaxEdge;
-		intIdxMaxT = find(indCompMax,1,'first');
-		if isempty(intIdxMaxT)
+		if ~boolFoundMin
+			intIdxMinT=1;
+		end
+		intLastMinEdge = intIdxMinT;
+		
+		%find max edge
+		dblMaxEdge = dblT + dblScale/2;
+		boolFoundMax = false;
+		for intIdxMaxT=intLastMaxEdge:intN
+			boolFoundMax = vecT(intIdxMaxT) > dblMaxEdge;
+			if boolFoundMax
+				break;
+			end
+		end
+		if ~boolFoundMax
 			intIdxMaxT=intN;
 		else
-			intIdxMaxT = intIdxMaxT(1)-1;
+			intIdxMaxT = intIdxMaxT - 1;
 		end
+		intLastMaxEdge = intIdxMaxT;
+		
+		%calc deriv
 		if (intIdxMinT > intIdxMaxT)
 			dblD=0;
 		else
@@ -184,7 +186,7 @@ function vecMSD = calcSingleMSD(dblScale,vecT,vecV)
 			dbl_dT = max([dblScale (vecT(intIdxMaxT) - vecT(intIdxMinT))]);
 			dblD = (vecV(intIdxMaxT) - vecV(intIdxMinT))/dbl_dT;
 		end
-
+		
 		%select points within window
 		vecMSD(intS) = dblD;
 	end
