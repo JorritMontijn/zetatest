@@ -39,6 +39,11 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 		return;
 	end
 	
+	%% check if there are spikes before onset of trial #1 and after the offset of last trial
+	if vecEventT(1) > vecSpikeTimes(1) || (vecEventT(end) + dblUseMaxDur) > vecSpikeTimes(end)
+		warning([mfilename ':PossibleDataInsufficiency'],'There are no spikes before onset of the first or after offset of the last trial. Are you sure you included a lead-in and lead-out epoch?');
+	end
+	
 	%% build pseudo data, stitching stimulus periods
 	if boolStitch
 		[vecPseudoSpikeTimes,vecPseudoEventT] = getPseudoSpikeVectors(vecSpikeTimes,vecEventT,dblUseMaxDur);
