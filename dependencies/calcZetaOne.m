@@ -91,11 +91,11 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
 			%get temp offset
-			[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear] = ...
-				getTempOffset(vecSpikeT,vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
+			[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear,vecThisSpikeTimes] = ...
+				getTempOffsetOne(vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
 			
 			%assign data
-			cellRandT{intResampling} = vecSpikeT;
+			cellRandT{intResampling} = vecThisSpikeTimes;
 			cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
 			vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));
 		end
@@ -105,11 +105,11 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
 			%get temp offset
-			[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear] = ...
-				getTempOffset(vecSpikeT,vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
+			[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear,vecThisSpikeTimes] = ...
+				getTempOffsetOne(vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
 			
 			%assign data
-			cellRandT{intResampling} = vecSpikeT;
+			cellRandT{intResampling} = vecThisSpikeTimes;
 			cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
 			vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));
 		end
