@@ -7,6 +7,7 @@ function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeT
 	if ~exist('boolDiscardEdges','var') || isempty(boolDiscardEdges)
 		boolDiscardEdges = false;
 	end
+	assert(dblWindowDur>0,'Window duration must be positive');
 	
 	%% pre-allocate
 	intSamples = numel(vecSpikeTimes);
@@ -17,11 +18,28 @@ function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeT
 	dblPseudoEventT = 0;
 	intLastUsedSample = 0;
 	intFirstSample = [];
+	intStartSpike = 1;
 	%run
 	for intTrial=1:intTrials
+		%find start
 		dblEventT = vecEventT(intTrial);
-		intStartSample = (find(vecSpikeTimes >= dblEventT,1));
-		intEndSample = (find(vecSpikeTimes > (dblEventT+dblWindowDur),1)-1);
+		for intStartSpike=intStartSpike:intSamples
+			if vecSpikeTimes(intStartSpike) >= dblEventT
+				break;
+			end
+		end
+		intStartSample = intStartSpike;
+		
+		%find end
+		dblEndT = dblEventT+dblWindowDur;
+		for intStopSpike=intStartSample:intSamples
+			if vecSpikeTimes(intStopSpike) > dblEndT
+				break;
+			end
+		end
+		intEndSample = intStopSpike;
+		
+		%ensure order
 		if intStartSample > intEndSample
 			intEndSample = [];
 			intStartSample = [];
