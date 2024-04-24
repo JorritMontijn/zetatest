@@ -110,5 +110,10 @@ function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeT
 	
 	%% recombine into vector
 	vecPseudoSpikeTimes = cell2vec(cellPseudoSpikeT);
+	if boolDiscardEdges
+		%remove lagging data
+		indRem=vecPseudoSpikeTimes>(vecPseudoStartT(end)+dblWindowDur);
+		vecPseudoSpikeTimes(indRem) = [];
+	end
 end
 
