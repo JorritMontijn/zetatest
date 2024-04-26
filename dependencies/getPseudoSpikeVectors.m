@@ -37,7 +37,7 @@ function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeT
 				break;
 			end
 		end
-		intEndSample = intStopSpike;
+		intEndSample = intStopSpike-1;
 		
 		%ensure order
 		if intStartSample > intEndSample
@@ -86,7 +86,6 @@ function [vecPseudoSpikeTimes,vecPseudoStartT] = getPseudoSpikeVectors(vecSpikeT
 			intFirstSample = vecUseSamples(1);
 			dblPseudoT0 = dblPseudoEventT;
 		end
-		
 		
 		cellPseudoSpikeT{intTrial} = vecLocalPseudoT;
 		vecPseudoStartT(intTrial) = dblPseudoEventT;
