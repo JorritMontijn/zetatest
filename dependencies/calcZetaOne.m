@@ -29,9 +29,14 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 		end
 	end
 	
-	%% reduce spikes
+	%% check if there are spikes before onset of trial #1 and after the offset of last trial
 	if size(vecEventStarts,2)>2,error([mfilename ':IncorrectMatrixForm'],'Incorrect input form for vecEventStarts; size must be [m x 1] or [m x 2]');end
 	vecEventT = vecEventStarts(:,1);
+	if vecSpikeTimes(1) > vecEventT(1)  || (vecEventT(end) + dblUseMaxDur) > vecSpikeTimes(end)
+		warning([mfilename ':PossibleDataInsufficiency'],'There are no spikes before onset of the first or after offset of the last trial. Are you sure you included a lead-in and lead-out epoch?');
+	end
+	
+	%% reduce spikes
 	dblStartT = max([vecSpikeTimes(1) min(vecEventT)-dblUseMaxDur*5*dblJitterSize]);
 	dblStopT = max(vecEventT)+dblUseMaxDur*5*dblJitterSize;
 	vecSpikeTimes(vecSpikeTimes < dblStartT | vecSpikeTimes > dblStopT) = [];
@@ -91,11 +96,11 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
 			%get temp offset
-			[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear] = ...
-				getTempOffset(vecSpikeT,vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
+			[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear,vecThisSpikeTimes] = ...
+				getTempOffsetOne(vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
 			
 			%assign data
-			cellRandT{intResampling} = vecSpikeT;
+			cellRandT{intResampling} = vecThisSpikeTimes;
 			cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
 			vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));
 		end
@@ -105,11 +110,11 @@ function [vecSpikeT,vecRealDiff,vecRealFrac,vecRealFracLinear,cellRandT,cellRand
 			vecStimUseOnTime = vecStartOnly + matJitterPerTrial(:,intResampling);
 			
 			%get temp offset
-			[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear] = ...
-				getTempOffset(vecSpikeT,vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
+			[vecRandDiff,vecThisSpikeFracs,vecThisFracLinear,vecThisSpikeTimes] = ...
+				getTempOffsetOne(vecPseudoSpikeTimes,vecStimUseOnTime,dblUseMaxDur);
 			
 			%assign data
-			cellRandT{intResampling} = vecSpikeT;
+			cellRandT{intResampling} = vecThisSpikeTimes;
 			cellRandDiff{intResampling} = vecRandDiff - mean(vecRandDiff);
 			vecMaxRandD(intResampling) = max(abs(cellRandDiff{intResampling}));
 		end

@@ -88,7 +88,9 @@ function vecHandles = makeZetaPlot(vecSpikeTimes,matEventTimes,sZETA,sRate,intPl
 		dblBinSize = 0.025;
 	end
 	vecBins = 0:dblBinSize:dblUseMaxDur;
+	warning('off','doPEP:WrongSyntax');
 	[vecMean,vecSEM,vecWindowBinCenters] = doPEP(vecSpikeTimes,vecBins,matEventTimes(:,1),sOpt);
+	warning('on','doPEP:WrongSyntax');
 	errorbar(vecWindowBinCenters,vecMean,vecSEM);
 	ylim([0 max(get(gca,'ylim'))]);
 	title(sprintf('Mean spiking over trials'));

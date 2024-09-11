@@ -139,6 +139,10 @@ function [dblZetaP,sZETA,sRate,sLatencies] = zetatest(vecSpikeTimes,matEventTime
 		boolStopSupplied = true;
 	end
 	
+	%sort by onset times
+	[vecEventOnsets,vecReorderEvents] = sort(matEventTimes(:,1)); %#ok<ASGLU>
+	matEventTimes = matEventTimes(vecReorderEvents,:);
+	
 	%trial dur
 	if ~exist('dblUseMaxDur','var') || isempty(dblUseMaxDur)
 		dblUseMaxDur = min(diff(matEventTimes(:,1)));
