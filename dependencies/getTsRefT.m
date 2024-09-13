@@ -34,7 +34,13 @@ function vecRefT = getTsRefT(vecTimestamps,vecEventStartT,dblUseMaxDur,dblSuperR
 	else
 		dblSampInterval = median(diff(vecTimestamps));
 		dblTol = dblSampInterval/dblSuperResFactor;
-		vecRefT = uniquetol(sort(cell2vec(cellRefT)),dblTol);
+		% vecRefT = uniquetol(sort(cell2vec(cellRefT)),dblTol);
+        vecVals = sort(cell2vec(cellRefT));
+		vecRefT = myUniquetol(vecVals,dblTol);
 	end
 end
 
+function vecData = myUniquetol(vecData,dblTol)
+% uniquetol function to match equivalent used in python
+vecData = unique(floor(vecData/dblTol)*dblTol);
+end
