@@ -1,7 +1,8 @@
 function vecSpikeTimes = getUniqueSpikes(vecSpikeTimes)
 	%introduce minimum jitter to identical spikes
 	vecSpikeTimes = sort(vecSpikeTimes);
-	dblUniqueOffset = max(eps(vecSpikeTimes));
+	%dblUniqueOffset = max(eps(vecSpikeTimes));
+	dblUniqueOffset = eps(class(vecSpikeTimes)); % to match Python version
 	indDuplicates = [false;diff(vecSpikeTimes)<dblUniqueOffset];
 	while any(indDuplicates)
 		vecNotUnique = vecSpikeTimes(indDuplicates);

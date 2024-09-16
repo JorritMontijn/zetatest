@@ -6,14 +6,16 @@
 
 %% zetatest_default
 disp('zetatest_default, expected to take about 2 s')
-sLoad = load('testZetaTestData.mat');
+pth = fileparts(which('testZetatest'));
+sLoad = load(fullfile(pth,'testZetaTestData.mat'));
 rng(1,'twister'); 
 dblZetaP = zetatest(sLoad.vecSpikeTimes1,sLoad.vecStimulusStartTimes);
 assert(abs(dblZetaP - 7.702804163978172e-05)<1E-6)
 
 %% zetatest_specified
 disp('zetatest_specified, expected to take about 2 s')
-sLoad = load('testZetaTestData.mat');
+pth = fileparts(which('testZetatest'));
+sLoad = load(fullfile(pth,'testZetaTestData.mat'));
 rng(1,'twister'); 
 intPlot = 0;
 vecRestrictRange = [0 inf];
@@ -26,14 +28,16 @@ assert(abs(dblZetaP - 1.353659556455611e-04)<1E-6)
 
 %% zetatstest_default
 disp('zetatstest_default, expected to take about 6 s')
-sLoad = load('testZetaTestData.mat');
+pth = fileparts(which('testZetatest'));
+sLoad = load(fullfile(pth,'testZetaTestData.mat'));
 rng(1,'twister');
 dblZetaP = zetatstest(sLoad.vecTimestamps, sLoad.vecData1, sLoad.matEventTimesTs(:,1),[],sLoad.intResampNum);
 assert(abs(dblZetaP-0.027278506931302)<1E-6)
 
 %% zetatstest_specified
 disp('zetatstest_specified, expected to take about 6 s')
-sLoad = load('testZetaTestData.mat');
+pth = fileparts(which('testZetatest'));
+sLoad = load(fullfile(pth,'testZetaTestData.mat'));
 rng(1,'twister');
 intPlot = 0;
 vecRestrictRange = [0 inf];
@@ -47,7 +51,8 @@ assert(abs(dblZetaP - 0.027276318742224)<1E-6)
 
 %% zetatest2_neurons
 disp('zetatest2_two_neurons, expected to take about 0.7 s')
-sLoad = load('testZetaTestData.mat');
+pth = fileparts(which('testZetatest'));
+sLoad = load(fullfile(pth,'testZetaTestData.mat'));
 rng(1,'twister');
 intTrials = 240; %that's already more than enough
 intResampNum = [];
@@ -59,7 +64,8 @@ assert(abs(dblZetaP - 8.685750946035853e-06)<1E-6)
 
 %% zetatest2_stimuli
 disp('zetatest2_two_stimuli, expected to take about 0.1 s')
-sLoad = load('testZetaTestData.mat');
+pth = fileparts(which('testZetatest'));
+sLoad = load(fullfile(pth,'testZetaTestData.mat'));
 vecTrials1 = sLoad.vecStimulusOrientation==0;
 vecTrials2 = sLoad.vecStimulusOrientation==90;
 intResampNum = [];
@@ -71,7 +77,8 @@ assert(abs(dblZetaP - 0.010218584062786)<1E-6)
 
 %% zetatstest2_neurons
 disp('zetatstest2_neurons, expected to take about 0.2 s')
-sLoad = load('testZetaTestData.mat');
+pth = fileparts(which('testZetatest'));
+sLoad = load(fullfile(pth,'testZetaTestData.mat'));
 rng(1,'twister');
 intTrials = 240; %that's already more than enough
 intResampNum = [];
@@ -83,7 +90,8 @@ assert(abs(dblZetaP - 7.201222648300920e-06)<1E-6)
 
 %% zetatstest2_stimuli
 disp('zetatstest2_stimuli, expected to take about 0.04 s')
-sLoad = load('testZetaTestData.mat');
+pth = fileparts(which('testZetatest'));
+sLoad = load(fullfile(pth,'testZetaTestData.mat'));
 rng(1,'twister');
 intResampNum = [];
 intPlot = 0;
