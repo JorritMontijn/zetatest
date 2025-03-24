@@ -11,6 +11,7 @@ function vecSpikeTimes = getUniqueSpikes(vecSpikeTimes)
 		vecSpikeTimes(indDuplicates) = vecSpikeTimes(indDuplicates) + vecJitter;
 		vecSpikeTimes = sort(vecSpikeTimes);
 		indDuplicates = [false;diff(vecSpikeTimes)<dblUniqueOffset];
+        dblUniqueOffset = dblUniqueOffset * 2; % to avoid endless loop if vecJitter is too small
     end
 end
 
