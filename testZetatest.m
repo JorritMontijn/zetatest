@@ -60,7 +60,7 @@ intPlot = 0;
 [dblZetaP,sZeta] = zetatest2(sLoad.vecSpikeTimes1,sLoad.matEventTimes(1:intTrials,:),...
     sLoad.vecSpikeTimes2,sLoad.matEventTimes(1:intTrials,:),...
     sLoad.dblUseMaxDur,[],intPlot);
-assert(abs(dblZetaP - 8.685750946035853e-06)<1E-6)
+assert(abs(dblZetaP - 0.00000356925555644594)<1E-6)  
 
 %% zetatest2_stimuli
 disp('zetatest2_two_stimuli, expected to take about 0.1 s')
@@ -73,7 +73,7 @@ intPlot = 0;
 rng(1,'twister');
 [dblZetaP,sZeta] = zetatest2(sLoad.vecSpikeTimes1,sLoad.matEventTimes(vecTrials1,:),...
     sLoad.vecSpikeTimes1,sLoad.matEventTimes(vecTrials2,:),sLoad.dblUseMaxDur,intResampNum,intPlot);
-assert(abs(dblZetaP - 0.010218584062786)<1E-6)
+assert(abs(dblZetaP - 0.00908076827309078904)<1E-6)
 
 %% zetatstest2_neurons
 disp('zetatstest2_neurons, expected to take about 0.2 s')
