@@ -1,5 +1,7 @@
 # The ZETA-test repository
-Repository containing ZETA-test functions and dependencies. For an example of how to use the code, check runExampleZETA.m in the /example/ subfolder. Your output should look like the images in the same directory. 
+Repository containing ZETA-test functions and dependencies. Most up to date version is located at https://github.com/Herseninstituut/zetatest 
+
+For an example of how to use the code, check runExampleZETA.m in the /example/ subfolder. Your output should look like the images in the same directory. 
 
 Our pre-print describing data-stitching, the time-series ZETA-test, and the two-sample tests is now online: https://www.biorxiv.org/content/10.1101/2023.10.30.564780v1
 
@@ -25,8 +27,7 @@ Neurophysiological studies depend on a reliable quantification of whether and wh
 
 Finally, ZETA’s timescale-, parameter- and binning-free nature allowed us to implement a ZETA-derived algorithm to calculate peak onset and offset latencies in neuronal spike trains with theoretically unlimited temporal resolution. 
 
-Please send any questions or comments to j.montijn at nin.knaw.nl.
-
+Original code by Jorrit Montijn. Maintenance by Alexander Heimel.
 
 # Dependencies
 The ZETA-test functions require the following Mathworks toolboxes to work:
