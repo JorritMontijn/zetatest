@@ -32,11 +32,15 @@ function [dblZetaP,sZETA,sRate,sLatencies] = zetatest(vecSpikeTimes,matEventTime
 	%		- dblZetaT_InvSign; time corresponding to -ZETA
 	%		- intZetaIdx_InvSign; entry corresponding to -ZETA
 	%		- dblUseMaxDur; window length used to calculate ZETA
-	%		- vecLatencies; different latency estimates, number determined by intLatencyPeaks. If no peaks are detected, it returns NaNs:
-	%			1) Latency of ZETA
+	%		- vecLatencies; different latency estimates, number determined by intLatencyPeaks. 
+    %			1) Latency of ZETA peak
 	%			2) Latency of largest z-score with inverse sign to ZETA
 	%			3) Peak time of instantaneous firing rate
 	%			4) Onset time of above peak, defined as the first crossing of peak half-height
+	%           If no peaks are detected, it returns NaNs.
+    %           For true onset latencies, we recommend using LatenZy
+    %           https://github.com/Herseninstituut/latenZy, based on the 
+    %           zeta-test. 
 	%		- vecLatencyVals; data values corresponding to the above peaks
 	%	- sRate; structure with fields:
 	%		- vecRate; instantaneous spiking rates (like a PSTH)
@@ -54,10 +58,14 @@ function [dblZetaP,sZETA,sRate,sLatencies] = zetatest(vecSpikeTimes,matEventTime
 	%		Additionally, it will return peak onset latency (first crossing of peak half-height) using getOnset.m:
 	%		- dblOnset: latency for peak onset
 	%	- sLatencies; structure containing latencies (copy of sZETA.vecLatencies)
-	%		- Onset
-	%		- Peak
+	%		- Onset (peak half-height) based on instanteneous firing rate
+	%		- Peak based on instanteneous firing rate
 	%		- ZETA
 	%		- ZETA_InvSign
+    %       For true onset latencies, we recommend using LatenZy
+    %       https://github.com/Herseninstituut/latenZy, based on the 
+    %       zeta-test. 
+
 	%
 	%Note: zetatest will use parallel computing if you have an active worker pool; if not, it will
 	%not start a parallel pool itself.
