@@ -20,14 +20,18 @@ This repository contains five main functions:
 4) zetatstest2.m: Same as (2), but for testing differences between two time-series data arrays.
 5) getIFR.m: Calculates the instantaneous firing rate (IFR) without running the ZETA-test. Use this as you would a PSTH function.
 
-Additionally, we provide two ZETA-based functions for latency estimation:
+# Rationale for ZETA
+Neurophysiological studies depend on a reliable quantification of whether and when a neuron responds to stimulation, be it sensory, optogenetically or otherwise. However, current statistical analysis methods to determine a neuron’s responsiveness require arbitrary parameter choices, such as a binning size. This choice can change the results of the analysis, which invites bad statistical practice and reduces the replicability of analyses. Moreover, many methods, such as bin-wise t-tests, only detect classically mean-rate modulated  cells. Especially with advent of techniques that yield increasingly large numbers of cells, such as Neuropixels  recordings or two-photon calcium imaging, it is important to use tests for cell-inclusion that require no manual curation. Here, we present a new family of statistical tests for responses in point-event and time-series data for one- and two-sample comparisons: the family of ZETA-tests. As shown in our papers, they outperform approaches such as optimally-binned ANOVAs, t-tests and model-based approaches, in the sense that it includes more cells in real neurophysiological data at a similar false-positive rate. 
+
+# Latency estimation
+We provide two additional ZETA-based functions for latency estimation ([zetatest/latenzy](https://github.com/Herseninstituut/zetatest/tree/main/latenzy)):
 1) latenzy.m: Estimates the onset latency for spike times of a single neuron (note that this estimate is different, but more accurate than the one obtained using zetatest.m).
 2) latenzy2.m: Estimates when spiking starts to diverge between two conditions.
 
+Note that the estimate for onset latency is different, but more accurate than the one obtained using zetatest.m. 
 
-# Rationale for ZETA
+**If you use *latenZy* in your work, please cite the paper:** Haak R., Heimel J. A. (2025). *LatenZy: non-parametric, binning-free estimation of latencies from neural spiking data.* *Journal of Neurophysiology*. [https://doi.org/10.1152/jn.00332.2025](https://doi.org/10.1152/jn.00332.2025)
 
-Neurophysiological studies depend on a reliable quantification of whether and when a neuron responds to stimulation, be it sensory, optogenetically or otherwise. However, current statistical analysis methods to determine a neuron’s responsiveness require arbitrary parameter choices, such as a binning size. This choice can change the results of the analysis, which invites bad statistical practice and reduces the replicability of analyses. Moreover, many methods, such as bin-wise t-tests, only detect classically mean-rate modulated  cells. Especially with advent of techniques that yield increasingly large numbers of cells, such as Neuropixels  recordings or two-photon calcium imaging, it is important to use tests for cell-inclusion that require no manual curation. Here, we present a new family of statistical tests for responses in point-event and time-series data for one- and two-sample comparisons: the family of ZETA-tests. As shown in our papers, they outperform approaches such as optimally-binned ANOVAs, t-tests and model-based approaches, in the sense that it includes more cells in real neurophysiological data at a similar false-positive rate. 
 
 ## Credits
 
