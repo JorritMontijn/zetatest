@@ -6,7 +6,7 @@ These methods leverage the cumulative distribution of spike times to detect time
 
 **If you use *latenZy* in your work, please cite the paper:** Haak R., Heimel J. A. (2025). *LatenZy: non-parametric, binning-free estimation of latencies from neural spiking data.* *Journal of Neurophysiology*. [https://doi.org/10.1152/jn.00332.2025](https://doi.org/10.1152/jn.00332.2025)
 
-*LatenZy* is an extension of the zetatest for neural responsiveness, available in both [Python](https://github.com/Herseninstituut/zetapy) and [MATLAB](https://github.com/Herseninstituut/zetatest).
+*LatenZy* is an extension of the ZETA-test for neural responsiveness, available in both [Python](https://github.com/Herseninstituut/zetapy) and [MATLAB](https://github.com/Herseninstituut/zetatest).
 
 
 ## Estimating response latencies with ***`latenZy`***
