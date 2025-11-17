@@ -64,7 +64,7 @@ pip install -e.
 ```
 
 ## Preparing your data
-***`latenZy`*** requires continuous spike and event times in absolute timestamps. If your data is trial-aligned (spikes relative to stimulus onset) and lacks original event times, you must reconstruct absolute spike times and provide the corresponding event timestamps. ***`latenZy2`*** accepts trial-aligned data directly. See the [Preprocessing guidelines](./data_preparation.md) for detailed instructions. 
+***`latenZy`*** requires continuous spike and event times in absolute timestamps. If your data is trial-aligned (spikes relative to stimulus onset) and lacks original event times, you must reconstruct absolute spike times and provide the corresponding event timestamps. ***`latenZy2`*** accepts trial-aligned data directly. See the [preprocessing guidelines](./data_preparation.md) for detailed instructions. 
 
 ## Dependencies
 The Python implementation requires the following packages to work:
