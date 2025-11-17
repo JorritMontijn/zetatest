@@ -58,7 +58,7 @@ spikeTimes = [newSpikes{:}];
 This produces pseudo-global spike and event times compatible with *`latenZy`*. 
 
 In the first step of the algorithm, data is stitched across repetitions by removing spikes outside the event window `use_dur`/`useDur`. The excluded intervals between event repetiations are substracted from all subsequent times, creating a continuous timeline of only event-related activity for statistics. Make sure that `do_stitch`/`doStitch` is set to **True** (it is by default).
-> ⚠️ **Important:** Make sure `use_dur`/`useDur` does **not** include periods without spikes, as silent intervals distort the stitched data and bias latency estimates.
+> ⚠️ **Important:** Make sure the analysis window `use_dur`/`useDur` does **not** include periods without spikes, as silent intervals distort the stitched data and bias latency estimates.
 
 
 ## Using ***`latenZy2`*** with trial-aligned spike data
