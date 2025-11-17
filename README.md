@@ -21,7 +21,7 @@ This repository contains five main functions:
 5) getIFR.m: Calculates the instantaneous firing rate (IFR) without running the ZETA-test. Use this as you would a PSTH function.
 
 Additionally, we provide two ZETA-based functions for latency estimation:
-1) latenzy.m: Estimates the response latency for spike times of a single neuron (note that this estimate is different, but more accurate than the one obtained using zetatest.m).
+1) latenzy.m: Estimates the onset latency for spike times of a single neuron (note that this estimate is different, but more accurate than the one obtained using zetatest.m).
 2) latenzy2.m: Estimates when spiking starts to diverge between two conditions.
 
 
