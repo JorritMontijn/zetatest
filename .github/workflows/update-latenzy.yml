@@ -1,40 +1,47 @@
 name: Auto-update latenzy subtree
 
 on:
-  # Run on a schedule (every hour here, change as needed)
   schedule:
-    - cron: '0 * * * *'
-  # Allow manual triggering
-  workflow_dispatch: {}
+    - cron: '0 * * * *'  # every hour, adjust if needed
+  workflow_dispatch: {}   # allows manual triggering
 
 permissions:
-  contents: write  # needed to push commits
+  contents: write  # needed to commit back to repo
 
 jobs:
   update-latenzy:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the zetatest repo
       - name: Checkout zetatest
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
+      # Configure git user for commits
       - name: Configure Git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+      # Add latenzy remote
       - name: Add latenzy as remote
         run: |
           git remote add latenzy https://github.com/Herseninstituut/latenzy.git || true
           git fetch latenzy
 
-      - name: Pull latest latenzy into subtree
+      # Add or update subtree
+      - name: Add or update latenzy subtree
         run: |
-          git subtree pull --prefix=latenzy latenzy main --squash -m "Auto-update latenzy subtree"
+          if [ ! -d "latenzy" ]; then
+            git subtree add --prefix=latenzy latenzy main --squash -m "Add latenzy subtree"
+          else
+            git subtree pull --prefix=latenzy latenzy main --squash -m "Update latenzy subtree"
+          fi
 
-      - name: Push changes if any
+      # Push changes back to zetatest if any
+      - name: Push changes
         uses: ad-m/github-push-action@v0.8.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
