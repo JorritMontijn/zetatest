@@ -4,7 +4,7 @@ Welcome to the ***latenZy*** repository—a Python and MATLAB toolbox containing
 
 These methods leverage the cumulative distribution of spike times to detect time-locked changes in neural firing without relying on predefined time bins. Through an iterative process, they identify statistically significant changes in firing relative to the expected baseline activity—whether aligned to a single event or contrasting experimental conditions. This framework provides robust, data-driven estimates of when neural activity begins to change, without assuming any specific response pattern.
 
-**If you use *latenZy* in your work, please cite the paper:** Haak R., Heimel J. A. (2025). *LatenZy: non-parametric, binning-free estimation of latencies from neural spiking data.* *Journal of Neurophysiology*. [https://doi.org/10.1152/jn.00332.2025](https://doi.org/10.1152/jn.00332.2025)
+**If you use *latenZy* in your work, please cite the paper:** Haak R., Heimel J. A. (2025). *LatenZy: nonparametric, binning-free estimation of latencies from neural spiking data.* *Journal of Neurophysiology*. [https://doi.org/10.1152/jn.00332.2025](https://doi.org/10.1152/jn.00332.2025)
 
 *LatenZy* is an extension of the ZETA-test for neural responsiveness, available in both [Python](https://github.com/Herseninstituut/zetapy) and [MATLAB](https://github.com/Herseninstituut/zetatest).
 
