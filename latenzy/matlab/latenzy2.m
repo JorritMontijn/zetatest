@@ -207,7 +207,11 @@ while doContinue
     [realDiff,realTime,spikeFrac1,~,spikeFrac2,~,tempDiffUnSub,fracLinear] = ...
         calcTempDiff2(spikesPerEvent1,spikesPerEvent2,thisMaxDur,useFastInterp);
     if numel(realDiff) < 3
-        return
+        if any(keepPeaks)
+            break
+        else
+            return
+        end
     end
 
     %get largest deviation

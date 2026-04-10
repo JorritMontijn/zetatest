@@ -132,6 +132,8 @@ def latenzy(spike_times,
 
         real_diff, real_time, spike_frac, frac_linear = calc_temp_diff(pseudo_spike_times, pseudo_event_times, this_max_dur)
         if len(real_diff) < 3:
+            if any(keep_peaks):
+                break
             return np.nan, {}
 
         # Peak detection
@@ -347,6 +349,8 @@ def latenzy2(
             calc_temp_diff2(spikes1, spikes2, this_max_dur)
 
         if len(real_diff) < 3:
+            if any(keep_peaks):
+                break
             return np.nan, {}
 
         # Peak detection
