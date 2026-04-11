@@ -2,10 +2,20 @@
 """
 latenzy.py
 
-Contains latenzy and latenzy2 to compute latencies for spiking responses
-See Haak et al. 2025
+Contains latenzy and latenzy2 to compute latencies for spiking responses.
+See Haak et al. 2025.
 
-2025, Alexander Heimel, translated from MATLAB version by Robin Haak
+Original MATLAB version:
+    Robin Haak
+    v1.0 - 30 June 2025
+
+Python translation:
+    Alexander Heimel & Robin Haak, 2025
+
+Updates:
+    v1.0.1 - 10 April 2026
+    - Fixed refinement bug where valid peaks could be discarded when len(real_diff) < 3
+      [identified and reported by jiumao2]
 """
 
 import numpy as np
@@ -132,7 +142,10 @@ def latenzy(spike_times,
 
         real_diff, real_time, spike_frac, frac_linear = calc_temp_diff(pseudo_spike_times, pseudo_event_times, this_max_dur)
         if len(real_diff) < 3:
-            return np.nan, {}
+            if len(keep_peaks) > 0 and any(keep_peaks):
+                break
+            else:
+                return np.nan, {}
 
         # Peak detection
         max_diff = np.max(real_diff)
@@ -347,7 +360,10 @@ def latenzy2(
             calc_temp_diff2(spikes1, spikes2, this_max_dur)
 
         if len(real_diff) < 3:
-            return np.nan, {}
+            if len(keep_peaks) > 0 and any(keep_peaks):
+                break
+            else:
+                return np.nan, {}
 
         # Peak detection
         max_val = np.max(real_diff)
