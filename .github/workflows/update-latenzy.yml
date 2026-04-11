@@ -2,11 +2,11 @@ name: Auto-update latenzy subtree
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # every day at midnight
-  workflow_dispatch: {}   # allows manual triggering
+    - cron: '0 0 * * *'  # once per day at 00:00 UTC
+  workflow_dispatch: {}
 
 permissions:
-  contents: write  # needed to commit back to repo
+  contents: write
 
 jobs:
   update-latenzy:
@@ -15,7 +15,7 @@ jobs:
     steps:
       # Checkout the zetatest repo
       - name: Checkout zetatest
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
@@ -40,9 +40,17 @@ jobs:
             git subtree pull --prefix=latenzy latenzy main --squash -m "Update latenzy subtree"
           fi
 
-      # Push changes back to zetatest if any
+      # Commit only if there are changes
+      - name: Commit changes if needed
+        run: |
+          if git diff --quiet; then
+            echo "No changes to commit"
+          else
+            git add .
+            git commit -m "Update latenzy subtree"
+          fi
+
+      # Push changes
       - name: Push changes
-        uses: ad-m/github-push-action@v0.8.0
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: ${{ github.ref }}
+        run: |
+          git push origin HEAD:${{ github.ref }}
