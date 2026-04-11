@@ -2,7 +2,7 @@ name: Auto-update latenzy subtree
 
 on:
   schedule:
-    - cron: '0 * * * *'  # every hour, adjust if needed
+    - cron: '0 0 * * *'  # every day at midnight
   workflow_dispatch: {}   # allows manual triggering
 
 permissions:
