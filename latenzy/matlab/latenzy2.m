@@ -1,6 +1,6 @@
 function [latency,sLatenzy2] = latenzy2(spikeTimes1,eventTimes1,spikeTimes2,eventTimes2,useDur,resampNum,peakAlpha,useParPool,useDirectQuant,restrictNeg,makePlots)
 % get latency of spiking difference between two conditions, syntax:
-% [latency,sLatenzy2] = latenzy2(spikeTimes1,eventTimes1,spikeTimes2,eventTimes2,useDur,resampNum,minPeakZ,useParPool,useDirectQuant,restrictNeg,makePlots)  
+% [latency,sLatenzy2] = latenzy2(spikeTimes1,eventTimes1,spikeTimes2,eventTimes2,useDur,resampNum,minPeakZ,useParPool,useDirectQuant,restrictNeg,makePlots)
 %   inputs:
 %   - spikeTimes1: [S x 1]: spike times condition 1 (s)
 %   - eventTimes1: [T x 1]: event times condition 1 (s)
@@ -46,7 +46,9 @@ function [latency,sLatenzy2] = latenzy2(spikeTimes1,eventTimes1,spikeTimes2,even
 %   v0.9 - 18 February 2025
 %   - created by Robin Haak
 %   v1.0 - 30 June 2025
-
+%   v1.0.1 - 10 April 2026
+%   - fixed refinement bug where valid peaks could be discarded when numel(realDiff) < 3 [identified and reported by @jiumao2]
+        
 %% prep
 %check for alternative input
 altInput = false;
@@ -91,7 +93,7 @@ elseif useDur(2)==0
     assert(useDur(1)<0,[mfilename ':WrongMaxDurInput'],...
         sprintf('When useDur(2) is 0, useDur(1) must be a negative scalar, you requested [%.3f %.3f]',useDur(1),useDur(2)));
 elseif useDur(2)<0
-        error([mfilename ':WrongMaxDurInput'],'useDur(2) cannot be negative when useDur(1) is negative!');
+    error([mfilename ':WrongMaxDurInput'],'useDur(2) cannot be negative when useDur(1) is negative!');
 end
 
 %get resampNum
@@ -109,7 +111,7 @@ if ~exist('useParPool','var') || isempty(useParPool)
     try
         objPool = gcp('nocreate'); %get current parallel pool (no creation)
         if isempty(objPool) || ~isprop(objPool,'NumWorkers') || objPool.NumWorkers < 4
-            useParPool = false; 
+            useParPool = false;
         else
             useParPool = true;
         end
@@ -207,8 +209,13 @@ while doContinue
     [realDiff,realTime,spikeFrac1,~,spikeFrac2,~,tempDiffUnSub,fracLinear] = ...
         calcTempDiff2(spikesPerEvent1,spikesPerEvent2,thisMaxDur,useFastInterp);
     if numel(realDiff) < 3
-        return
+        if ~isempty(keepPeaks) && any(keepPeaks)
+            break
+        else
+            return
+        end
     end
+
 
     %get largest deviation
     [maxDiff,maxIdx] = max(realDiff);
