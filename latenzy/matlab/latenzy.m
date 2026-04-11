@@ -40,7 +40,9 @@ function [latency,sLatenzy] = latenzy(spikeTimes,eventTimes,useDur,resampNum,jit
 %   v0.9 - 6 January 2025
 %   - created by Robin Haak
 %   v1.0 - 30 June 2025
-
+%   v1.0.1 - 10 April 2026
+%   - fixed refinement bug where valid peaks could be discarded when numel(realDiff) < 3 [identified and reported by @jiumao2]
+        
 %% prep
 %ensure correct orientation
 spikeTimes = spikeTimes(:);
@@ -167,9 +169,13 @@ while doContinue
     %get temporal deviation
     [realDiff,realTime,spikeFrac,fracLinear] = calcTempDiff(pseudoSpikeTimes,pseudoEventTimes,thisMaxDur);
     if numel(realDiff) < 3
-        return
+        if ~isempty(keepPeaks) && any(keepPeaks)
+            break
+        else
+            return
+        end
     end
-    
+
     %get largest deviation
     [maxDiff,maxIdx] = max(realDiff);
     [minDiff,minIdx] = min(realDiff);
