@@ -1,5 +1,7 @@
 # The ZETA-test repository
-Repository containing ZETA-test functions and dependencies. Most up to date version is located at https://github.com/Herseninstituut/zetatest 
+Repository containing ZETA-test functions and dependencies. 
+
+**Most up to date version is located at https://github.com/Herseninstituut/zetatest**
 
 For an example of how to use the code, check runExampleZETA.m in the /example/ subfolder. Your output should look like the images in the same directory. 
 
@@ -28,7 +30,7 @@ We provide two additional ZETA-based functions for latency estimation ([zetatest
 1) latenzy.m: Estimates the onset latency for spike times of a single neuron (note that this estimate is different, but more accurate than the one obtained using zetatest.m).
 2) latenzy2.m: Estimates when spiking starts to diverge between two conditions.
 
-Note that the estimate for onset latency is different, but more accurate than the one obtained using zetatest.m. 
+Note that the estimate for onset latency is different, but more accurate than the one obtained using zetatest.m. For issues and questions about latenZy, please use the ([latenZy repository](https://github.com/Herseninstituut/latenzy)).
 
 **If you use *latenZy* in your work, please cite the paper:** Haak R., Heimel J. A. (2025). *LatenZy: non-parametric, binning-free estimation of latencies from neural spiking data.* *Journal of Neurophysiology*. [https://doi.org/10.1152/jn.00332.2025](https://doi.org/10.1152/jn.00332.2025)
 
