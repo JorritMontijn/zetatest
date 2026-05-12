@@ -191,7 +191,7 @@ def get_rel_spike_times(spike_times, event_times, use_dur=None, add_artif_spikes
     rel_spike_times = np.sort(np.concatenate(spikes_per_event)) if spikes_per_event else np.array([])
     
     if add_artif_spikes and rel_spike_times.size > 0:
-        rel_spike_times = np.unique(np.concatenate(([use_dur[0]], rel_spike_times, [use_dur[1]])))
+        rel_spike_times = np.concatenate(([use_dur[0]], rel_spike_times, [use_dur[1]]))
 
     return rel_spike_times, spikes_per_event
 

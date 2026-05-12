@@ -42,7 +42,9 @@ function [latency,sLatenzy] = latenzy(spikeTimes,eventTimes,useDur,resampNum,jit
 %   v1.0 - 30 June 2025
 %   v1.0.1 - 10 April 2026
 %   - fixed refinement bug where valid peaks could be discarded when numel(realDiff) < 3 [identified and reported by @jiumao2]
-        
+%   v1.0.2 - 11 May 2026
+%   - removed obsolete unique() call from getRelSpikeTimes() dependency
+
 %% prep
 %ensure correct orientation
 spikeTimes = spikeTimes(:);

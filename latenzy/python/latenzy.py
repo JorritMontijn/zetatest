@@ -16,6 +16,9 @@ Updates:
     v1.0.1 - 10 April 2026
     - Fixed refinement bug where valid peaks could be discarded when len(real_diff) < 3
       [identified and reported by jiumao2]
+    v1.0.2 - 11 May 2026
+    - Removed obsolete np.unique() call from get_rel_spike_times() dependency
+      
 """
 
 import numpy as np
