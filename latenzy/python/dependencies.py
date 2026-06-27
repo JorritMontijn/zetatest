@@ -62,11 +62,18 @@ def get_pseudo_times(spike_times, event_times, use_dur=None, discard_edges=False
         event_t = event_times[this_event] + use_dur[0]
 
         # Find start and end indices of spikes in this window
-        start_idx_candidates = np.where(spike_times >= event_t)[0]
-        end_idx_candidates = np.where(spike_times < (event_t + duration))[0]
+        # start_idx_candidates = np.where(spike_times >= event_t)[0]
+        # end_idx_candidates = np.where(spike_times < (event_t + duration))[0]
 
-        start_idx = start_idx_candidates[0] if start_idx_candidates.size > 0 else None
-        end_idx = end_idx_candidates[-1] if end_idx_candidates.size > 0 else None
+        # start_idx = start_idx_candidates[0] if start_idx_candidates.size > 0 else None
+        # end_idx = end_idx_candidates[-1] if end_idx_candidates.size > 0 else None
+        
+        # Use searchsorted() for speed
+        i_start = np.searchsorted(spike_times, event_t, side='left')
+        i_end   = np.searchsorted(spike_times, event_t + duration, side='left') - 1
+        
+        start_idx = i_start if i_start < sample_num else None
+        end_idx   = i_end   if i_end >= 0 else None
 
         # Handle edge cases for missing spikes
         if start_idx is None:
@@ -128,12 +135,20 @@ def get_pseudo_times(spike_times, event_times, use_dur=None, discard_edges=False
 
     # Add end spikes
     if not discard_edges:
-        indices = np.where(spike_times > (event_times[-1] + duration))[0]
-        if indices.size == 0:
-            start_idx = np.where(spike_times >= event_times[-1])[0][0]
-            samp_add_end = np.arange(start_idx, sample_num)
+        # indices = np.where(spike_times > (event_times[-1] + duration))[0]
+        # if indices.size == 0:
+        #     start_idx = np.where(spike_times >= event_times[-1])[0][0]
+        #     samp_add_end = np.arange(start_idx, sample_num)
+        # else:
+        #     samp_add_end = np.arange(indices[0], sample_num)
+        
+        # Use searchsorted() for speed
+        i_after = np.searchsorted(spike_times, event_times[-1] + duration, side='right')
+        if i_after == sample_num:   
+            i_from = np.searchsorted(spike_times, event_times[-1], side='left')
+            samp_add_end = np.arange(i_from, sample_num)
         else:
-            samp_add_end = np.arange(indices[0], sample_num)
+            samp_add_end = np.arange(i_after, sample_num)
 
         if samp_add_end.size > 0:
             append = spike_times[samp_add_end] - event_times[-1] + pseudo_event_t
@@ -183,10 +198,16 @@ def get_rel_spike_times(spike_times, event_times, use_dur=None, add_artif_spikes
 
     # Compute spike times relative to each event
     spikes_per_event = []
+    win_lo, win_hi = use_dur
     for t in event_times:
-        mask = (spike_times > t + use_dur[0]) & (spike_times < t + use_dur[1])
-        rel_spikes = spike_times[mask] - t
-        spikes_per_event.append(rel_spikes)
+        # mask = (spike_times > t + use_dur[0]) & (spike_times < t + use_dur[1])
+        # rel_spikes = spike_times[mask] - t
+        # spikes_per_event.append(rel_spikes)
+        
+        # Use searchsorted() for speed
+        i_lo = np.searchsorted(spike_times, t + win_lo, side='right')
+        i_hi = np.searchsorted(spike_times, t + win_hi, side='left')
+        spikes_per_event.append(spike_times[i_lo:i_hi] - t)
 
     rel_spike_times = np.sort(np.concatenate(spikes_per_event)) if spikes_per_event else np.array([])
     

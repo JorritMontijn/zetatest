@@ -18,7 +18,9 @@ Updates:
       [identified and reported by jiumao2]
     v1.0.2 - 11 May 2026
     - Removed obsolete np.unique() call from get_rel_spike_times() dependency
-      
+    v1.0.3 - 26 June 2026
+    - Replaced O(S) `np.where` scans with `np.searchsorted` in `get_pseudo_times()` and `get_rel_spike_times()`
+          
 """
 
 import numpy as np
