@@ -9,7 +9,7 @@ These methods leverage the cumulative distribution of spike times to detect time
 *LatenZy* is an extension of the ZETA-test for neural responsiveness, available for both [Python](https://github.com/Herseninstituut/zetapy) and [MATLAB](https://github.com/Herseninstituut/zetatest).
 
 
-## Estimating response latencies with ***`latenZy`***
+## Estimating response latencies using ***latenZy***
 ***`latenZy`*** is designed to estimate **when neural responses begin following discrete events** (e.g., stimulus onset) by detecting event-locked changes in spiking rates. 
 
 
@@ -33,7 +33,7 @@ fprintf('Estimated latency: %.2f ms\n', t);
 *Detecting neural spiking onset using `latenZy` (Python example). Red = estimate.*
 
 
-## Estimating when spiking starts to diverge between conditions with ***`latenZy2`***
+## Estimating when spiking starts to diverge between conditions using ***latenZy2***
 ***`latenZy2`*** identifies the time point at which neural spiking **begins to diverge between experimental conditions** (e.g., hit vs miss or attended vs unattended).
   
 **Python example:**
